@@ -2,7 +2,6 @@ package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestioneordini.enums.StatoPagato;
-import it.paoloadesso.gestioneordini.enums.converters.StatoPagatoConverter;
 import jakarta.persistence.*;
 
 @Entity
@@ -25,7 +24,7 @@ public class OrdiniProdottiEntity {
     @Column(name = "quantita_prodotto", nullable = false)
     private Long quantitaProdotto;
 
-    @Convert(converter = StatoPagatoConverter.class)
+    @Enumerated(EnumType.STRING)
     @Column(name = "stato_pagato", nullable = false)
     private StatoPagato statoPagato;
 

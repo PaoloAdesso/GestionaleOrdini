@@ -1,7 +1,6 @@
 package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.enums.StatoOrdine;
-import it.paoloadesso.gestioneordini.enums.converters.StatoOrdineConverter;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -23,7 +22,7 @@ public class OrdiniEntity {
     @Column(name = "data_ordine", nullable = false)
     private LocalDate dataOrdine;
 
-    @Convert(converter = StatoOrdineConverter.class)
+    @Enumerated(EnumType.STRING)
     @Column(name = "stato_ordine", nullable = false)
     private StatoOrdine statoOrdine;
 

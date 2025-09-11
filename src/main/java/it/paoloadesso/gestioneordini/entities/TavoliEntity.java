@@ -1,8 +1,6 @@
 package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
-import it.paoloadesso.gestioneordini.enums.converters.StatoOrdineConverter;
-import it.paoloadesso.gestioneordini.enums.converters.StatoTavoloConverter;
 import jakarta.persistence.*;
 
 
@@ -19,7 +17,7 @@ public class TavoliEntity {
     private String numeroNomeTavolo;
 
 
-    @Convert(converter = StatoTavoloConverter.class)
+    @Enumerated(EnumType.STRING)
     @Column(name = "stato", nullable = false)
     private StatoTavolo statoTavolo;
 
