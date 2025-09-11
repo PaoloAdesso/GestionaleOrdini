@@ -43,7 +43,7 @@ CREATE TABLE ordini (
                           CONSTRAINT fk_tavoli FOREIGN KEY (id_tavolo) REFERENCES tavoli(id_tavolo) ON DELETE CASCADE
 );
 -- =========================
--- Tabella Ponte Ordini - Prodotti (Many-to-Many)
+-- Tabella ponte Ordini - Prodotti (Many-to-Many)
 -- =========================
 CREATE TABLE ordini_prodotti (
                                            id_ordine BIGINT NOT NULL,
