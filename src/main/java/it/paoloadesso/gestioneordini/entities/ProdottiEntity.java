@@ -12,6 +12,7 @@ public class ProdottiEntity {
     @Id
     @SequenceGenerator(name = "prodotti_id_gen", sequenceName = "prodotti_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "prodotti_id_gen")
+    @Column(name = "id_prodotto")
     private Long id;
 
     @Column(name = "nome_prodotto", nullable = false)

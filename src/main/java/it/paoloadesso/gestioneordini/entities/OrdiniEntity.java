@@ -13,6 +13,7 @@ public class OrdiniEntity {
     @Id
     @SequenceGenerator(name = "ordini_id_gen", sequenceName = "ordini_id_seq", allocationSize = 1)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "ordini_id_gen")
+    @Column(name = "id_ordine")
     private Long idOrdine;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
