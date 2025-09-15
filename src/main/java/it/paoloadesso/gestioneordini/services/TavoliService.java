@@ -3,27 +3,23 @@ package it.paoloadesso.gestioneordini.services;
 import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
 import it.paoloadesso.gestioneordini.dto.TavoliDto;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
-import it.paoloadesso.gestioneordini.mapper.TavoliCreateMapper;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class TavoliService {
 
     private final TavoliRepository tavoliRepository;
-    private final TavoliCreateMapper tavoliCreateMapper;
     private final TavoliMapper tavoliMapper;
 
 
-    public TavoliService(TavoliRepository tavoliRepository, TavoliCreateMapper tavoliCreateMapper, TavoliMapper tavoliMapper) {
+    public TavoliService(TavoliRepository tavoliRepository, TavoliMapper tavoliMapper) {
         this.tavoliRepository = tavoliRepository;
-        this.tavoliCreateMapper = tavoliCreateMapper;
         this.tavoliMapper = tavoliMapper;
     }
 
@@ -32,7 +28,7 @@ public class TavoliService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
         }
 
-        TavoliEntity entity = tavoliRepository.save(tavoliCreateMapper.dtoToEntity(dto));
+        TavoliEntity entity = tavoliRepository.save(tavoliMapper.createTavoliDtoToEntity(dto));
         return tavoliMapper.entityToDto(entity);
     }
 
@@ -63,11 +59,11 @@ public class TavoliService {
     }
 
     public void deleteTavoloById(Long idTavolo) {
+        // Cerco il tavolo e se non c'è restituisco relativo messaggio
         TavoliEntity tavolo = tavoliRepository.findById(idTavolo)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato."));
-
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Tavolo con ID " + idTavolo + " non trovato."));
+        // Elimino il tavolo trovato
         tavoliRepository.delete(tavolo);
-
-
     }
 }
