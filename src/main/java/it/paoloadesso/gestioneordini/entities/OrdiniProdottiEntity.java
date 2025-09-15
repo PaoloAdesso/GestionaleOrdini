@@ -2,6 +2,7 @@ package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestioneordini.enums.StatoPagato;
+import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.persistence.*;
 
 @Entity
@@ -29,7 +30,6 @@ public class OrdiniProdottiEntity {
     private StatoPagato statoPagato;
 
     public OrdiniProdottiEntity() {
-        this.statoPagato = StatoPagato.NON_PAGATO;
     }
 
     public OrdiniProdottiEntity(OrdiniProdottiId id, OrdiniEntity ordine, ProdottiEntity prodotto, Long quantitaProdotto, StatoPagato statoPagato) {
@@ -77,6 +77,10 @@ public class OrdiniProdottiEntity {
     }
 
     public void setStatoPagato(StatoPagato statoPagato) {
-        this.statoPagato = statoPagato;
+    }
+
+    @PrePersist
+    public void prePersist(){
+        this.statoPagato = StatoPagato.NON_PAGATO;
     }
 }

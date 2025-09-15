@@ -29,7 +29,6 @@ public class TavoliEntity {
     }
 
     public TavoliEntity() {
-        this.statoTavolo = StatoTavolo.LIBERO;
     }
 
     public Long getId() {

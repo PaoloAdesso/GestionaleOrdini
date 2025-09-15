@@ -1,6 +1,7 @@
 package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.enums.StatoOrdine;
+import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -28,7 +29,6 @@ public class OrdiniEntity {
     private StatoOrdine statoOrdine;
 
     public OrdiniEntity() {
-        this.statoOrdine = StatoOrdine.IN_ATTESA;
     }
 
     public OrdiniEntity(Long idOrdine, TavoliEntity idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine) {
@@ -68,5 +68,10 @@ public class OrdiniEntity {
 
     public void setStatoOrdine(StatoOrdine statoOrdine) {
         this.statoOrdine = statoOrdine;
+    }
+
+    @PrePersist
+    public void prePersist(){
+        this.statoOrdine = StatoOrdine.IN_ATTESA;
     }
 }
