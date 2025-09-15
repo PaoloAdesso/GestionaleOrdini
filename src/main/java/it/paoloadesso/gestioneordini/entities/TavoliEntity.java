@@ -55,4 +55,9 @@ public class TavoliEntity {
     public void setStatoTavolo(StatoTavolo statoTavolo) {
         this.statoTavolo = statoTavolo;
     }
+
+    @PrePersist
+    public void prePersist(){
+        this.statoTavolo = StatoTavolo.LIBERO;
+    }
 }

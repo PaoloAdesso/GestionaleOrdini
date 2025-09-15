@@ -9,4 +9,5 @@ public interface TavoliRepository extends JpaRepository<TavoliEntity, Long> {
 
     boolean existsByNumeroNomeTavolo(String numeroNomeTavolo);
 
+    Long id(Long id);
 }

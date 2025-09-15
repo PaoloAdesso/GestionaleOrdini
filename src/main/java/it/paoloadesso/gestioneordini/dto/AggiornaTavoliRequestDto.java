@@ -1,9 +1,11 @@
 package it.paoloadesso.gestioneordini.dto;
 
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
+import jakarta.validation.constraints.NotNull;
 
 public class AggiornaTavoliRequestDto {
 
+    @NotNull
     private Long id;
 
     private String numeroNomeTavolo;

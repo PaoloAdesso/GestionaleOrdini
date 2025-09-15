@@ -1,6 +1,5 @@
 package it.paoloadesso.gestioneordini.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

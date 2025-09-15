@@ -8,8 +8,12 @@ import it.paoloadesso.gestioneordini.mapper.TavoliCreateMapper;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class TavoliService {
@@ -44,11 +48,28 @@ public class TavoliService {
         // Aggiorno i campi dell'entity con quelli del DTO
         tavolo.setNumeroNomeTavolo(dtoTavolo.getNumeroNomeTavolo());
         tavolo.setStatoTavolo(dtoTavolo.getStatoTavolo());
-
         // Salvo l'entity aggiornata
         TavoliEntity tavoloAggiornato = tavoliRepository.save(tavolo);
 
         // Mappo l'entity salvata a DTO e lo restituisco
         return tavoliMapper.entityToDto(tavoloAggiornato);
+    }
+
+    public List<TavoliResponseDto> getTavoli() {
+        List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
+        List<TavoliResponseDto> tavoliResponseDto = new ArrayList<>();
+        tavoliResponseDto = listaTavoli.stream()
+                .map(el->tavoliMapper.entityToDto(el))
+                .toList();
+        return tavoliResponseDto;
+    }
+
+    public void deleteTavoloById(Long idTavolo) {
+        TavoliEntity tavolo = tavoliRepository.findById(idTavolo)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato."));
+
+        tavoliRepository.delete(tavolo);
+
+
     }
 }
