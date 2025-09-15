@@ -3,7 +3,7 @@ package it.paoloadesso.gestioneordini.dto;
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.validation.constraints.NotNull;
 
-public class AggiornaTavoliRequestDto {
+public class TavoliDto {
 
     @NotNull
     private Long id;
@@ -12,13 +12,13 @@ public class AggiornaTavoliRequestDto {
 
     private StatoTavolo statoTavolo;
 
-    public AggiornaTavoliRequestDto(Long id, String numeroNomeTavolo, StatoTavolo statoTavolo) {
+    public TavoliDto(Long id, String numeroNomeTavolo, StatoTavolo statoTavolo) {
         this.id = id;
         this.numeroNomeTavolo = numeroNomeTavolo;
         this.statoTavolo = statoTavolo;
     }
 
-    public AggiornaTavoliRequestDto() {
+    public TavoliDto() {
         this.statoTavolo = StatoTavolo.LIBERO;
     }
 

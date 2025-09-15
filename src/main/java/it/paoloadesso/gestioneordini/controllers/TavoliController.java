@@ -1,8 +1,7 @@
 package it.paoloadesso.gestioneordini.controllers;
 
 import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
-import it.paoloadesso.gestioneordini.dto.AggiornaTavoliRequestDto;
-import it.paoloadesso.gestioneordini.dto.TavoliResponseDto;
+import it.paoloadesso.gestioneordini.dto.TavoliDto;
 import it.paoloadesso.gestioneordini.services.TavoliService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,17 +19,17 @@ public class TavoliController {
     }
 
     @PostMapping("/creaTavolo")
-    public ResponseEntity<TavoliResponseDto> creaTavolo(@Valid @RequestBody CreaTavoliDto tavolo) {
+    public ResponseEntity<TavoliDto> creaTavolo(@Valid @RequestBody CreaTavoliDto tavolo) {
         return ResponseEntity.ok(tavoliService.creaTavolo(tavolo));
     }
 
     @PutMapping("/aggiornaTavolo")
-    public ResponseEntity<TavoliResponseDto> aggiornaTavolo(@RequestBody AggiornaTavoliRequestDto tavolo) {
+    public ResponseEntity<TavoliDto> aggiornaTavolo(@RequestBody TavoliDto tavolo) {
         return ResponseEntity.ok(tavoliService.aggiornaTavolo(tavolo));
     }
 
     @GetMapping("/getListaTavoli")
-    public ResponseEntity<List<TavoliResponseDto>> getListaTavoli() {
+    public ResponseEntity<List<TavoliDto>> getListaTavoli() {
         return ResponseEntity.ok(tavoliService.getTavoli());
     }
 

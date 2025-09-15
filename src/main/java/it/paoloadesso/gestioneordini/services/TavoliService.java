@@ -1,14 +1,12 @@
 package it.paoloadesso.gestioneordini.services;
 
 import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
-import it.paoloadesso.gestioneordini.dto.AggiornaTavoliRequestDto;
-import it.paoloadesso.gestioneordini.dto.TavoliResponseDto;
+import it.paoloadesso.gestioneordini.dto.TavoliDto;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
 import it.paoloadesso.gestioneordini.mapper.TavoliCreateMapper;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -29,7 +27,7 @@ public class TavoliService {
         this.tavoliMapper = tavoliMapper;
     }
 
-    public TavoliResponseDto creaTavolo(CreaTavoliDto dto) {
+    public TavoliDto creaTavolo(CreaTavoliDto dto) {
         if (tavoliRepository.existsByNumeroNomeTavolo(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
         }
@@ -39,7 +37,7 @@ public class TavoliService {
     }
 
 
-    public TavoliResponseDto aggiornaTavolo(AggiornaTavoliRequestDto dtoTavolo) {
+    public TavoliDto aggiornaTavolo(TavoliDto dtoTavolo) {
         // Verifico se l'id del tavolo esiste
         TavoliEntity tavolo = tavoliRepository.findById(dtoTavolo.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -55,9 +53,9 @@ public class TavoliService {
         return tavoliMapper.entityToDto(tavoloAggiornato);
     }
 
-    public List<TavoliResponseDto> getTavoli() {
+    public List<TavoliDto> getTavoli() {
         List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
-        List<TavoliResponseDto> tavoliResponseDto = new ArrayList<>();
+        List<TavoliDto> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
                 .map(el->tavoliMapper.entityToDto(el))
                 .toList();
