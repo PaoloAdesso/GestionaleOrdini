@@ -1,7 +1,6 @@
 package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.enums.StatoOrdine;
-import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -19,7 +18,7 @@ public class OrdiniEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_tavolo", nullable = false)
-    private TavoliEntity idTavolo;
+    private TavoliEntity tavolo;
 
     @Column(name = "data_ordine", nullable = false)
     private LocalDate dataOrdine;
@@ -31,9 +30,9 @@ public class OrdiniEntity {
     public OrdiniEntity() {
     }
 
-    public OrdiniEntity(Long idOrdine, TavoliEntity idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine) {
+    public OrdiniEntity(Long idOrdine, TavoliEntity tavolo, LocalDate dataOrdine, StatoOrdine statoOrdine) {
         this.idOrdine = idOrdine;
-        this.idTavolo = idTavolo;
+        this.tavolo = tavolo;
         this.dataOrdine = dataOrdine;
         this.statoOrdine = statoOrdine;
     }
@@ -46,12 +45,12 @@ public class OrdiniEntity {
         this.idOrdine = idOrdine;
     }
 
-    public TavoliEntity getIdTavolo() {
-        return idTavolo;
+    public TavoliEntity getTavolo() {
+        return tavolo;
     }
 
-    public void setIdTavolo(TavoliEntity idTavolo) {
-        this.idTavolo = idTavolo;
+    public void setTavolo(TavoliEntity tavolo) {
+        this.tavolo = tavolo;
     }
 
     public LocalDate getDataOrdine() {
@@ -73,5 +72,6 @@ public class OrdiniEntity {
     @PrePersist
     public void prePersist(){
         this.statoOrdine = StatoOrdine.IN_ATTESA;
+        this.dataOrdine = LocalDate.now();
     }
 }
