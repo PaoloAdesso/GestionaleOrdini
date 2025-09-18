@@ -44,7 +44,7 @@ public class OrdiniService {
         }
 
         TavoliEntity tavolo = tavoliRepository.findById(dto.getIdTavolo())
-                .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato"));
 
         OrdiniEntity ordine = new OrdiniEntity();
         ordine.setTavolo(tavolo);
@@ -68,6 +68,9 @@ public class OrdiniService {
 
         ordiniProdottiRepository.saveAll(ordiniProdottiEntities);
 
+        // Alternativa usando mapStruct e non manuale:
+        // return ordiniMapper.ordiniEntityToDto(ordine);
+
         OrdiniDto ordineDto = new OrdiniDto();
         ordineDto.setIdOrdine(ordine.getIdOrdine());
         ordineDto.setIdTavolo(tavolo.getId());
@@ -85,8 +88,16 @@ public class OrdiniService {
         List<OrdiniEntity> ordini = ordiniRepository.findByTavoloIdAndStatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
 
         return ordini.stream()
-                .map(el->ordiniMapper.ordiniEntityToDto(el))
+                .map(el -> ordiniMapper.ordiniEntityToDto(el))
                 .collect(Collectors.toList());
     }
+
+    public List<OrdiniDto> getListaTuttiOrdiniAperti() {
+        List<OrdiniEntity> ordini = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
+        return ordini.stream()
+                .map(el -> ordiniMapper.ordiniEntityToDto(el))
+                .collect(Collectors.toList());
+    }
+
 
 }

@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", ex.getStatusCode().value());
-        body.put("error", ex.getStatusCode().getClass());
+        body.put("error", ex.getStatusCode().toString());
         body.put("message", ex.getReason());
         return new ResponseEntity<>(body, ex.getStatusCode());
     }

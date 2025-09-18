@@ -1,12 +1,10 @@
 package it.paoloadesso.gestioneordini.dto;
 
-import it.paoloadesso.gestioneordini.enums.StatoOrdine;
 import it.paoloadesso.gestioneordini.enums.StatoPagato;
 
-import java.time.LocalDate;
+import java.util.Objects;
 
 public class ProdottiOrdinatiResponseDto {
-    public static class ProdottoOrdinatoDto {
         private Long idProdotto;
         private Long quantitaProdotto;
         private StatoPagato statoPagato;
@@ -34,7 +32,25 @@ public class ProdottiOrdinatiResponseDto {
         public void setStatoPagato(StatoPagato statoPagato) {
             this.statoPagato = statoPagato;
         }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        ProdottiOrdinatiResponseDto that = (ProdottiOrdinatiResponseDto) o;
+        return Objects.equals(idProdotto, that.idProdotto) && Objects.equals(quantitaProdotto, that.quantitaProdotto) && statoPagato == that.statoPagato;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(idProdotto, quantitaProdotto, statoPagato);
+    }
 
+    public ProdottiOrdinatiResponseDto() {
+    }
+
+    public ProdottiOrdinatiResponseDto(Long idProdotto, Long quantitaProdotto, StatoPagato statoPagato) {
+        this.idProdotto = idProdotto;
+        this.quantitaProdotto = quantitaProdotto;
+        this.statoPagato = statoPagato;
+    }
 }

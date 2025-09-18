@@ -1,9 +1,15 @@
 package it.paoloadesso.gestioneordini.dto;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
 public class ProdottiOrdinatiRequestDto {
 
+    @NotNull
     private Long idProdotto;
 
+    @NotNull
+    @Positive
     private Long quantitaProdotto;
 
     public Long getIdProdotto() {

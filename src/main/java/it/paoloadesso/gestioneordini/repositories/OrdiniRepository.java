@@ -14,5 +14,7 @@ public interface OrdiniRepository extends JpaRepository<OrdiniEntity, Long> {
 
     List<OrdiniEntity> findByTavoloIdAndStatoOrdineNot(Long idTavolo, StatoOrdine stato);
 
+    List<OrdiniEntity> findByStatoOrdineNot(StatoOrdine stato);
+
 
 }

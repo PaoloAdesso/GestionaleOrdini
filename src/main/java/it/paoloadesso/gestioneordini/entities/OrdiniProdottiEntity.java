@@ -77,6 +77,7 @@ public class OrdiniProdottiEntity {
     }
 
     public void setStatoPagato(StatoPagato statoPagato) {
+        this.statoPagato = statoPagato;
     }
 
     @PrePersist

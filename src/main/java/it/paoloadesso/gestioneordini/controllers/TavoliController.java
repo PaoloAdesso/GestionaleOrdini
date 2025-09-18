@@ -38,4 +38,9 @@ public class TavoliController {
         tavoliService.deleteTavoloById(idTavolo);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/getListaTavoliLiberi")
+    public ResponseEntity<List<TavoliDto>> getListaTavoliLiberi() {
+        return ResponseEntity.ok(tavoliService.getTavoliLiberi());
+    }
 }

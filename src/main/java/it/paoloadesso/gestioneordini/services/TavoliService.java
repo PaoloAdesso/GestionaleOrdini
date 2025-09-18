@@ -3,6 +3,7 @@ package it.paoloadesso.gestioneordini.services;
 import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
 import it.paoloadesso.gestioneordini.dto.TavoliDto;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
+import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
 import org.springframework.http.HttpStatus;
@@ -65,5 +66,14 @@ public class TavoliService {
                         "Tavolo con ID " + idTavolo + " non trovato."));
         // Elimino il tavolo trovato
         tavoliRepository.delete(tavolo);
+    }
+
+    public List<TavoliDto> getTavoliLiberi() {
+        List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
+        List<TavoliDto> tavoliResponseDto;
+        tavoliResponseDto = listaTavoli.stream()
+                .map(el->tavoliMapper.entityToDto(el))
+                .toList();
+        return tavoliResponseDto;
     }
 }
