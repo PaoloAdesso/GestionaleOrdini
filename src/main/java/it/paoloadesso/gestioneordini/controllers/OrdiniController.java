@@ -43,5 +43,11 @@ public class OrdiniController {
         return ResponseEntity.ok(ordiniService.getListaTuttiOrdiniAperti());
     }
 
-
+    @GetMapping("/getListaDettaglioOrdineByIdTavolo")
+    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDto>> getListaDettaglioOrdineByIdTavolo
+            (@RequestParam @NotNull(message = "L'id del tavolo è obbligatorio")
+             @Positive(message = "L'id del tavolo deve essere un numero positivo")
+             Long idTavolo) {
+        return ResponseEntity.ok(ordiniService.getListaDettaglioOrdineByIdTavolo(idTavolo));
+    }
 }

@@ -15,7 +15,6 @@ public interface TavoliMapper {
     @Mapping(target = "id", ignore = true)
     TavoliEntity createTavoliDtoToEntity(CreaTavoliDto creaTavoliDto);
 
-
     TavoliDto entityToDto(TavoliEntity tavoliEntity);
 
     @Mapping(target = "id", ignore = true)

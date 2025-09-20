@@ -12,12 +12,15 @@ import it.paoloadesso.gestioneordini.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestioneordini.repositories.OrdiniRepository;
 import it.paoloadesso.gestioneordini.repositories.ProdottiRepository;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -100,4 +103,86 @@ public class OrdiniService {
     }
 
 
+    /** PSEUDOCODICE
+        Obiettivo:
+        - Input: idTavolo valido con annotazioni per validazione (@NotNull, @Positive)
+        - Output: lista di DTO ordine+prodotti per tutti gli ordini NON chiusi del tavolo
+
+        Poi devo fare:
+        - Validazione esistenza tavolo: if + eccezione 404
+        - Filtrare le righe “ordine-prodotto” su tavolo e stato non CHIUSO
+        - Raggruppamento per idOrdine con groupBy
+        - Per ogni gruppo: costruisco DTO dell’ordine con prodotti
+
+        QUINDI:
+        - Validazione tavolo:
+         se tavolo NON esiste con idTavolo:
+         lancia Eccezione NOT_FOUND
+
+        - Recupero righe ordine-prodotto filtrate:
+         righe = repository.cercaRighePerTavoloConStatoNonChiuso(idTavolo)
+
+        - Raggruppo righe per idOrdine:
+         gruppi = raggruppa righe per riga.ordine.idOrdine
+
+        - Costruisco la lista di DTO ordine+prodotti:
+         listaDTO = lista vuota
+         per ciascun gruppo in gruppi:
+         ordine = prendi ordine dalla prima riga del gruppo
+         dtoOrdine = mappa ordine in DTO base
+
+         prodotti = lista vuota
+         per ciascuna riga in gruppo:
+         prodottoDTO = creaProdottoDTO(riga)
+         aggiungi prodottoDTO a prodotti
+
+         dtoOrdine.setProdotti(prodotti)
+         aggiungi dtoOrdine a listaDTO
+
+        - Ritorno risultato:
+         ritorna listaDTO
+     */
+    public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineByIdTavolo(
+            @NotNull(message = "L'id del tavolo è obbligatorio")
+            @Positive(message = "L'id del tavolo deve essere un numero positivo")
+            Long idTavolo) {
+
+        if (!tavoliRepository.existsById(idTavolo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
+        }
+
+        List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
+                .findByOrdine_Tavolo_IdAndOrdine_StatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
+
+        Map<Long, List<OrdiniProdottiEntity>> byOrdine = righe.stream()
+                .collect(Collectors.groupingBy(r -> r.getOrdine().getIdOrdine()));
+
+        /**     PSEUDOCODICE:
+         per ogni gruppo di righeOrdine:
+         ordine di riferimento (che è sempre lo stesso in tutte le righe)
+         ordine = prendo ordine dalla prima riga
+
+         creo un DTO base con i dati dell'ordine
+         dtoBase = mapper.creaDTOdaOrdine(primaRiga)
+
+         dopo: aggiungo la lista prodotti scorrendo tutte le righe
+         */
+        return byOrdine.values().stream().map(righeOrdine -> {
+            OrdiniEntity ord = righeOrdine.get(0).getOrdine();
+
+            ListaOrdiniEProdottiByTavoloResponseDto dtoBase =
+                    ordiniMapper.ordiniProdottiEntityToDto(righeOrdine.get(0));
+
+            List<ProdottiOrdinatiResponseDto> prodotti = righeOrdine.stream().map(e -> {
+                ProdottiOrdinatiResponseDto p = new ProdottiOrdinatiResponseDto();
+                p.setIdProdotto(e.getProdotto().getId());
+                p.setQuantitaProdotto(e.getQuantitaProdotto());
+                p.setStatoPagato(e.getStatoPagato());
+                return p;
+            }).toList();
+
+            dtoBase.setListaOrdineERelativiProdotti(prodotti);
+            return dtoBase;
+        }).toList();
+    }
 }
