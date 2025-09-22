@@ -16,14 +16,17 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class OrdiniService {
 
     private final OrdiniRepository ordiniRepository;
@@ -42,9 +45,7 @@ public class OrdiniService {
     }
 
     public OrdiniDto creaOrdine(CreaOrdiniDto dto) {
-        if (!tavoliRepository.existsById(dto.getIdTavolo())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ordine non creato poiché il tavolo non esiste.");
-        }
+        controlloSeIlTavoloEsiste(dto.getIdTavolo());
 
         TavoliEntity tavolo = tavoliRepository.findById(dto.getIdTavolo())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato"));
@@ -84,15 +85,19 @@ public class OrdiniService {
     }
 
     public List<OrdiniDto> getListaOrdiniApertiByTavolo(Long idTavolo) {
-        if (!tavoliRepository.existsById(idTavolo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
-        }
+        controlloSeIlTavoloEsiste(idTavolo);
 
         List<OrdiniEntity> ordini = ordiniRepository.findByTavoloIdAndStatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
 
         return ordini.stream()
                 .map(el -> ordiniMapper.ordiniEntityToDto(el))
                 .collect(Collectors.toList());
+    }
+
+    private void controlloSeIlTavoloEsiste(Long idTavolo) {
+        if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
+        }
     }
 
     public List<OrdiniDto> getListaTuttiOrdiniAperti() {
@@ -147,13 +152,40 @@ public class OrdiniService {
             @Positive(message = "L'id del tavolo deve essere un numero positivo")
             Long idTavolo) {
 
-        if (!tavoliRepository.existsById(idTavolo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
-        }
+        controlloSeIlTavoloEsiste(idTavolo);
 
         List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
                 .findByOrdine_Tavolo_IdAndOrdine_StatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
 
+        return costruzioneDettagliOrdine(righe);
+    }
+
+    public List<OrdiniDto> getListaOrdiniDiOggi() {
+        List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(LocalDate.now(), StatoOrdine.CHIUSO);
+        return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
+    }
+
+    public List<OrdiniDto> getListaOrdiniDiOggiByTavolo(@NotNull @Positive Long idTavolo) {
+        controlloSeIlTavoloEsiste(idTavolo);
+        List<OrdiniEntity> ordini = ordiniRepository
+                .findByTavoloIdAndDataOrdineAndStatoOrdineNot(idTavolo, LocalDate.now(), StatoOrdine.CHIUSO);
+        return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
+    }
+
+    public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineDiOggiByIdTavolo(
+            @NotNull(message = "L'id del tavolo è obbligatorio")
+            @Positive(message = "L'id del tavolo deve essere un numero positivo")
+            Long idTavolo) {
+
+        controlloSeIlTavoloEsiste(idTavolo);
+
+        List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
+                .findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(idTavolo, LocalDate.now() , StatoOrdine.CHIUSO);
+
+        return costruzioneDettagliOrdine(righe);
+    }
+
+    private List<ListaOrdiniEProdottiByTavoloResponseDto> costruzioneDettagliOrdine(List<OrdiniProdottiEntity> righe) {
         Map<Long, List<OrdiniProdottiEntity>> byOrdine = righe.stream()
                 .collect(Collectors.groupingBy(r -> r.getOrdine().getIdOrdine()));
 
@@ -168,11 +200,8 @@ public class OrdiniService {
          dopo: aggiungo la lista prodotti scorrendo tutte le righe
          */
         return byOrdine.values().stream().map(righeOrdine -> {
-            OrdiniEntity ord = righeOrdine.get(0).getOrdine();
-
             ListaOrdiniEProdottiByTavoloResponseDto dtoBase =
                     ordiniMapper.ordiniProdottiEntityToDto(righeOrdine.get(0));
-
             List<ProdottiOrdinatiResponseDto> prodotti = righeOrdine.stream().map(e -> {
                 ProdottiOrdinatiResponseDto p = new ProdottiOrdinatiResponseDto();
                 p.setIdProdotto(e.getProdotto().getId());
@@ -180,7 +209,6 @@ public class OrdiniService {
                 p.setStatoPagato(e.getStatoPagato());
                 return p;
             }).toList();
-
             dtoBase.setListaOrdineERelativiProdotti(prodotti);
             return dtoBase;
         }).toList();

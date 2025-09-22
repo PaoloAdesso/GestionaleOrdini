@@ -8,11 +8,13 @@ import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class TavoliService {
 
     private final TavoliRepository tavoliRepository;
@@ -25,12 +27,12 @@ public class TavoliService {
     }
 
     public TavoliDto creaTavolo(CreaTavoliDto dto) {
-        if (tavoliRepository.existsByNumeroNomeTavolo(dto.getNumeroNomeTavolo())) {
+        if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
         }
 
-        TavoliEntity entity = tavoliRepository.save(tavoliMapper.createTavoliDtoToEntity(dto));
-        return tavoliMapper.entityToDto(entity);
+        TavoliEntity tavolo = tavoliRepository.save(tavoliMapper.createTavoliDtoToEntity(dto));
+        return tavoliMapper.entityToDto(tavolo);
     }
 
 

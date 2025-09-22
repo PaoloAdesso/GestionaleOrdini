@@ -50,4 +50,26 @@ public class OrdiniController {
              Long idTavolo) {
         return ResponseEntity.ok(ordiniService.getListaDettaglioOrdineByIdTavolo(idTavolo));
     }
+
+    @GetMapping("/getListaDettaglioOrdineDiOggiByIdTavolo")
+    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDto>> getListaDettaglioOrdineDiOggiByIdTavolo
+            (@RequestParam @NotNull(message = "L'id del tavolo è obbligatorio")
+             @Positive(message = "L'id del tavolo deve essere un numero positivo")
+             Long idTavolo) {
+        return ResponseEntity.ok(ordiniService.getListaDettaglioOrdineDiOggiByIdTavolo(idTavolo));
+    }
+
+    @GetMapping("getListaOrdiniDiOggi")
+    public ResponseEntity<List<OrdiniDto>> getListaOrdiniDiOggi() {
+        return ResponseEntity.ok(ordiniService.getListaOrdiniDiOggi());
+    }
+
+    @GetMapping("getListaOrdiniDiOggiPerTavolo")
+    public ResponseEntity<List<OrdiniDto>> getListaOrdiniDiOggiPerTavolo(
+            @RequestParam @NotNull(message = "L'id del tavolo è obbligatorio")
+            @Positive(message = "L'id del tavolo deve essere un numero positivo")
+            Long idTavolo) {
+        return ResponseEntity.ok(ordiniService.getListaOrdiniDiOggiByTavolo(idTavolo));
+    }
+
 }

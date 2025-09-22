@@ -1,6 +1,5 @@
 package it.paoloadesso.gestioneordini.dto;
 
-import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.validation.constraints.NotBlank;
 
 public class CreaTavoliDto {
@@ -8,7 +7,7 @@ public class CreaTavoliDto {
     @NotBlank(message = "Il nome del tavolo è obbligatorio")
     private String numeroNomeTavolo;
 
-    public CreaTavoliDto(String numeroNomeTavolo, StatoTavolo statoTavolo) {
+    public CreaTavoliDto(String numeroNomeTavolo) {
         this.numeroNomeTavolo = numeroNomeTavolo;
     }
 

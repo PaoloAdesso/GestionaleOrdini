@@ -10,7 +10,7 @@ import java.util.List;
 @Repository
 public interface TavoliRepository extends JpaRepository<TavoliEntity, Long> {
 
-    boolean existsByNumeroNomeTavolo(String numeroNomeTavolo);
+    boolean existsByNumeroNomeTavoloIgnoreCase(String numeroNomeTavolo);
 
     List<TavoliEntity> findByStatoTavolo (StatoTavolo statoTavolo);
 }

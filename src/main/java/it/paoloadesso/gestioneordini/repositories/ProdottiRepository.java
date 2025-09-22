@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ProdottiRepository extends JpaRepository<ProdottiEntity, Long> {
+
+    boolean existsByNomeIgnoreCase(String nome);
 }
