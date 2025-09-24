@@ -10,9 +10,14 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface ProdottiMapper {
 
+    @Mapping(target = "id", ignore = true)
+    ProdottiEntity prodottiDtoToEntity (CreaProdottiDto prodottiDto);
+
     @Mapping(source = "id", target = "idProdotto")
-    ProdottiDto createProdottiEntityToDto (ProdottiEntity prodottiEntity);
+    ProdottiDto prodottiEntityToDto (ProdottiEntity prodottiEntity);
 
     @Mapping(target = "id", ignore = true)
     ProdottiEntity createProdottiDtoToEntity (CreaProdottiDto prodottiDto);
+
+    CreaProdottiDto createProdottiEntityToDto (ProdottiEntity prodottiEntity);
 }

@@ -8,14 +8,14 @@ import java.math.BigDecimal;
 
 public class CreaProdottiDto {
 
-    @NotBlank(message = "Il nome del prodotto è obbligatorio")
+    @NotBlank
     private String nome;
 
-    @NotBlank(message = "La categoria è obbligatoria")
+    @NotBlank
     private String categoria;
 
-    @NotNull(message = "Il prezzo è obbligatorio")
-    @DecimalMin(value = "0.01", message = "Il prezzo deve essere maggiore di 0")
+    @NotNull
+    @DecimalMin(value = "0.01")
     private BigDecimal prezzo;
 
     public CreaProdottiDto(String nome, String categoria, BigDecimal prezzo) {

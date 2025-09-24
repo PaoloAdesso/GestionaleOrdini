@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class OrdiniService {
 
     private final OrdiniRepository ordiniRepository;
@@ -44,6 +43,7 @@ public class OrdiniService {
         this.ordiniMapper = ordiniMapper;
     }
 
+    @Transactional
     public OrdiniDto creaOrdine(CreaOrdiniDto dto) {
         controlloSeIlTavoloEsiste(dto.getIdTavolo());
 
@@ -148,9 +148,7 @@ public class OrdiniService {
          ritorna listaDTO
      */
     public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineByIdTavolo(
-            @NotNull(message = "L'id del tavolo è obbligatorio")
-            @Positive(message = "L'id del tavolo deve essere un numero positivo")
-            Long idTavolo) {
+            @NotNull @Positive Long idTavolo) {
 
         controlloSeIlTavoloEsiste(idTavolo);
 
@@ -173,9 +171,7 @@ public class OrdiniService {
     }
 
     public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineDiOggiByIdTavolo(
-            @NotNull(message = "L'id del tavolo è obbligatorio")
-            @Positive(message = "L'id del tavolo deve essere un numero positivo")
-            Long idTavolo) {
+            @NotNull @Positive Long idTavolo) {
 
         controlloSeIlTavoloEsiste(idTavolo);
 

@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public class CreaTavoliDto {
 
-    @NotBlank(message = "Il nome del tavolo è obbligatorio")
+    @NotBlank
     private String numeroNomeTavolo;
 
     public CreaTavoliDto(String numeroNomeTavolo) {

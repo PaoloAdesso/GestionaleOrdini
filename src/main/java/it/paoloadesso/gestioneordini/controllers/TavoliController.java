@@ -19,12 +19,12 @@ public class TavoliController {
     }
 
     @PostMapping("/creaTavolo")
-    public ResponseEntity<TavoliDto> creaTavolo(@Valid @RequestBody CreaTavoliDto tavolo) {
+    public ResponseEntity<TavoliDto> creaTavolo(@RequestBody @Valid CreaTavoliDto tavolo) {
         return ResponseEntity.ok(tavoliService.creaTavolo(tavolo));
     }
 
     @PutMapping("/aggiornaTavolo")
-    public ResponseEntity<TavoliDto> aggiornaTavolo(@RequestBody TavoliDto tavolo) {
+    public ResponseEntity<TavoliDto> aggiornaTavolo(@RequestBody @Valid  TavoliDto tavolo) {
         return ResponseEntity.ok(tavoliService.aggiornaTavolo(tavolo));
     }
 

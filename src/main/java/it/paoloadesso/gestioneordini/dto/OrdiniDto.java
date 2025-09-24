@@ -1,6 +1,5 @@
 package it.paoloadesso.gestioneordini.dto;
 
-import it.paoloadesso.gestioneordini.entities.TavoliEntity;
 import it.paoloadesso.gestioneordini.enums.StatoOrdine;
 import jakarta.validation.constraints.NotNull;
 
@@ -8,16 +7,16 @@ import java.time.LocalDate;
 
 public class OrdiniDto {
 
-    @NotNull(message = "L'id ordine è obbligatorio")
+    @NotNull
     private Long idOrdine;
 
-    @NotNull(message = "L'id tavolo è obbligatorio")
+    @NotNull
     private Long idTavolo;
 
-    @NotNull(message = "La data ordine è obbligatoria")
+    @NotNull
     private LocalDate dataOrdine;
 
-    @NotNull(message = "Lo stato ordine è obbligatorio")
+    @NotNull
     private StatoOrdine statoOrdine;
 
     public OrdiniDto() {

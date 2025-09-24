@@ -14,7 +14,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 
 @Service
-@Transactional
 public class TavoliService {
 
     private final TavoliRepository tavoliRepository;
@@ -26,6 +25,7 @@ public class TavoliService {
         this.tavoliMapper = tavoliMapper;
     }
 
+    @Transactional
     public TavoliDto creaTavolo(CreaTavoliDto dto) {
         if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
@@ -35,7 +35,25 @@ public class TavoliService {
         return tavoliMapper.entityToDto(tavolo);
     }
 
+    public List<TavoliDto> getTavoli() {
+        List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
+        List<TavoliDto> tavoliResponseDto;
+        tavoliResponseDto = listaTavoli.stream()
+                .map(el->tavoliMapper.entityToDto(el))
+                .toList();
+        return tavoliResponseDto;
+    }
 
+    public List<TavoliDto> getTavoliLiberi() {
+        List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
+        List<TavoliDto> tavoliResponseDto;
+        tavoliResponseDto = listaTavoli.stream()
+                .map(el->tavoliMapper.entityToDto(el))
+                .toList();
+        return tavoliResponseDto;
+    }
+
+    @Transactional
     public TavoliDto aggiornaTavolo(TavoliDto dtoTavolo) {
         // Verifico se l'id del tavolo esiste
         TavoliEntity tavolo = tavoliRepository.findById(dtoTavolo.getId())
@@ -52,15 +70,7 @@ public class TavoliService {
         return tavoliMapper.entityToDto(tavoloAggiornato);
     }
 
-    public List<TavoliDto> getTavoli() {
-        List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
-        List<TavoliDto> tavoliResponseDto;
-        tavoliResponseDto = listaTavoli.stream()
-                .map(el->tavoliMapper.entityToDto(el))
-                .toList();
-        return tavoliResponseDto;
-    }
-
+    @Transactional
     public void deleteTavoloById(Long idTavolo) {
         // Cerco il tavolo e se non c'è restituisco relativo messaggio
         TavoliEntity tavolo = tavoliRepository.findById(idTavolo)
@@ -68,14 +78,5 @@ public class TavoliService {
                         "Tavolo con ID " + idTavolo + " non trovato."));
         // Elimino il tavolo trovato
         tavoliRepository.delete(tavolo);
-    }
-
-    public List<TavoliDto> getTavoliLiberi() {
-        List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
-        List<TavoliDto> tavoliResponseDto;
-        tavoliResponseDto = listaTavoli.stream()
-                .map(el->tavoliMapper.entityToDto(el))
-                .toList();
-        return tavoliResponseDto;
     }
 }

@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public class CreaOrdiniDto {
-    @NotNull(message = "L'id del tavolo è obbligatorio")
+    @NotNull
     private Long idTavolo;
 
-    @NotEmpty(message = "La lista dei prodotti ordinati non può essere vuota")
+    @NotEmpty
     private List<ProdottiOrdinatiRequestDto> listaProdottiOrdinati;
 
     public CreaOrdiniDto() {
