@@ -51,15 +51,30 @@ public class OrdiniController {
         return ResponseEntity.ok(ordiniService.getListaDettaglioOrdineDiOggiByIdTavolo(idTavolo));
     }
 
-    @GetMapping("getListaOrdiniDiOggi")
+    @GetMapping("/getListaOrdiniDiOggi")
     public ResponseEntity<List<OrdiniDto>> getListaOrdiniDiOggi() {
         return ResponseEntity.ok(ordiniService.getListaOrdiniDiOggi());
     }
 
-    @GetMapping("getListaOrdiniDiOggiPerTavolo")
+    @GetMapping("/getListaOrdiniDiOggiPerTavolo")
     public ResponseEntity<List<OrdiniDto>> getListaOrdiniDiOggiPerTavolo(
             @RequestParam @NotNull @Positive Long idTavolo) {
         return ResponseEntity.ok(ordiniService.getListaOrdiniDiOggiByTavolo(idTavolo));
     }
 
+    @PatchMapping("/{id}")
+    public ResponseEntity<RisultatoModificaOrdineDto> modificaOrdine(
+            @PathVariable Long id,
+            @Valid @RequestBody ModificaOrdineRequestDto requestDto) {
+
+        RisultatoModificaOrdineDto risultato = ordiniService.modificaOrdine(id, requestDto);
+
+        if (risultato.isOperazioneCompleta()) {
+            return ResponseEntity.ok(risultato);
+        } else if (risultato.getProdottiAggiunti() > 0) {
+            return ResponseEntity.status(207).body(risultato); // 207 - Successo parziale
+        } else {
+            return ResponseEntity.badRequest().body(risultato); // 400 - Tutti i prodotti falliti
+        }
+    }
 }

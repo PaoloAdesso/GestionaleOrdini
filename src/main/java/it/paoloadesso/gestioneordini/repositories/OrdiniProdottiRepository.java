@@ -18,4 +18,6 @@ public interface OrdiniProdottiRepository extends JpaRepository<OrdiniProdottiEn
     List<OrdiniProdottiEntity> findByOrdine_Tavolo_IdAndOrdine_StatoOrdineNot(Long idTavolo, StatoOrdine stato);
 
     List<OrdiniProdottiEntity> findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(Long idTavolo, LocalDate data, StatoOrdine stato);
+
+    List<OrdiniProdottiEntity> findByOrdine_IdOrdine(Long idOrdine);
 }
