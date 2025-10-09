@@ -10,7 +10,7 @@ public class ProdottiOrdinatiRequestDto {
 
     @NotNull
     @Positive
-    private Long quantitaProdotto;
+    private Integer quantitaProdotto;
 
     public Long getIdProdotto() {
         return idProdotto;
@@ -20,18 +20,18 @@ public class ProdottiOrdinatiRequestDto {
         this.idProdotto = idProdotto;
     }
 
-    public Long getQuantitaProdotto() {
+    public Integer getQuantitaProdotto() {
         return quantitaProdotto;
     }
 
-    public void setQuantitaProdotto(Long quantitaProdotto) {
+    public void setQuantitaProdotto(Integer quantitaProdotto) {
         this.quantitaProdotto = quantitaProdotto;
     }
 
     public ProdottiOrdinatiRequestDto() {
     }
 
-    public ProdottiOrdinatiRequestDto(Long idProdotto, Long quantitaProdotto) {
+    public ProdottiOrdinatiRequestDto(Long idProdotto, Integer quantitaProdotto) {
         this.idProdotto = idProdotto;
         this.quantitaProdotto = quantitaProdotto;
     }

@@ -277,7 +277,6 @@ public class OrdiniService {
                     if (aggiunto) {
                         prodottiAggiunti++;
                     }
-
                 } catch (Exception e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
                     String messaggioErrore = "Prodotto ID " + prodotto.getIdProdotto() + ": " + e.getMessage();
@@ -317,9 +316,9 @@ public class OrdiniService {
         if (ordiniProdottiRepository.existsById(chiave)) {
             // CASO 1: Prodotto già presente - aggiorno la quantità sommando
             OrdiniProdottiEntity ordineEsistente = ordiniProdottiRepository.findById(chiave).get();
-            Long quantitaEsistente = ordineEsistente.getQuantitaProdotto();
-            Long quantitaDaAggiungere = prodotto.getQuantitaProdotto();
-            Long quantitaModificataFinale = quantitaEsistente + quantitaDaAggiungere;
+            Integer quantitaEsistente = ordineEsistente.getQuantitaProdotto();
+            Integer quantitaDaAggiungere = prodotto.getQuantitaProdotto();
+            Integer quantitaModificataFinale = quantitaEsistente + quantitaDaAggiungere;
 
             ordineEsistente.setQuantitaProdotto(quantitaModificataFinale);
             ordiniProdottiRepository.save(ordineEsistente);
@@ -352,8 +351,8 @@ public class OrdiniService {
         OrdiniProdottiEntity ordineEsistente = ordiniProdottiRepository.findById(chiave)
                 .orElseThrow(() -> new RuntimeException("non presente nell'ordine"));
 
-        Long quantitaAttuale = ordineEsistente.getQuantitaProdotto();
-        Long quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
+        Integer quantitaAttuale = ordineEsistente.getQuantitaProdotto();
+        Integer quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
 
         // Controllo che non stia provando a rimuovere più di quello che c'è
         if (quantitaDaRimuovere > quantitaAttuale) {
@@ -361,7 +360,7 @@ public class OrdiniService {
                     ") maggiore di quella presente (" + quantitaAttuale + ")");
         }
 
-        Long quantitaFinale = quantitaAttuale - quantitaDaRimuovere;
+        Integer quantitaFinale = quantitaAttuale - quantitaDaRimuovere;
 
         if (quantitaFinale == 0) {
             // CASO 1: Rimuovo tutto - cancello la riga

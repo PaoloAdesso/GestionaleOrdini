@@ -11,11 +11,11 @@ public class ProdottiDaRimuovereDto {
 
     @NotNull
     @Positive
-    private Long quantitaDaRimuovere;
+    private Integer quantitaDaRimuovere;
 
     public ProdottiDaRimuovereDto() {}
 
-    public ProdottiDaRimuovereDto(Long idProdotto, Long quantitaDaRimuovere) {
+    public ProdottiDaRimuovereDto(Long idProdotto, Integer quantitaDaRimuovere) {
         this.idProdotto = idProdotto;
         this.quantitaDaRimuovere = quantitaDaRimuovere;
     }
@@ -23,8 +23,8 @@ public class ProdottiDaRimuovereDto {
     public Long getIdProdotto() { return idProdotto; }
     public void setIdProdotto(Long idProdotto) { this.idProdotto = idProdotto; }
 
-    public Long getQuantitaDaRimuovere() { return quantitaDaRimuovere; }
-    public void setQuantitaDaRimuovere(Long quantitaDaRimuovere) { this.quantitaDaRimuovere = quantitaDaRimuovere; }
+    public Integer getQuantitaDaRimuovere() { return quantitaDaRimuovere; }
+    public void setQuantitaDaRimuovere(Integer quantitaDaRimuovere) { this.quantitaDaRimuovere = quantitaDaRimuovere; }
 
     @Override
     public String toString() {

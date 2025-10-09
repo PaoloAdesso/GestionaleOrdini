@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class ProdottiOrdinatiResponseDto {
         private Long idProdotto;
-        private Long quantitaProdotto;
+        private Integer quantitaProdotto;
         private StatoPagato statoPagato;
 
         public Long getIdProdotto() {
@@ -17,11 +17,11 @@ public class ProdottiOrdinatiResponseDto {
             this.idProdotto = idProdotto;
         }
 
-        public Long getQuantitaProdotto() {
+        public Integer getQuantitaProdotto() {
             return quantitaProdotto;
         }
 
-        public void setQuantitaProdotto(Long quantitaProdotto) {
+        public void setQuantitaProdotto(Integer quantitaProdotto) {
             this.quantitaProdotto = quantitaProdotto;
         }
 
@@ -48,7 +48,7 @@ public class ProdottiOrdinatiResponseDto {
     public ProdottiOrdinatiResponseDto() {
     }
 
-    public ProdottiOrdinatiResponseDto(Long idProdotto, Long quantitaProdotto, StatoPagato statoPagato) {
+    public ProdottiOrdinatiResponseDto(Long idProdotto, Integer quantitaProdotto, StatoPagato statoPagato) {
         this.idProdotto = idProdotto;
         this.quantitaProdotto = quantitaProdotto;
         this.statoPagato = statoPagato;
