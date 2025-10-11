@@ -2,7 +2,6 @@ package it.paoloadesso.gestioneordini.entities;
 
 import it.paoloadesso.gestioneordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestioneordini.enums.StatoPagato;
-import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.persistence.*;
 
 @Entity

@@ -11,13 +11,13 @@ import org.mapstruct.ReportingPolicy;
 public interface ProdottiMapper {
 
     @Mapping(target = "id", ignore = true)
-    ProdottiEntity prodottiDtoToEntity (CreaProdottiDto prodottiDto);
+    ProdottiEntity prodottiDtoToEntity (ProdottiDto prodottiDto);
 
     @Mapping(source = "id", target = "idProdotto")
     ProdottiDto prodottiEntityToDto (ProdottiEntity prodottiEntity);
 
     @Mapping(target = "id", ignore = true)
-    ProdottiEntity createProdottiDtoToEntity (CreaProdottiDto prodottiDto);
+    ProdottiEntity createProdottiDtoToEntity (CreaProdottiDto creaProdottiDto);
 
     CreaProdottiDto createProdottiEntityToDto (ProdottiEntity prodottiEntity);
 }
