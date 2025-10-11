@@ -23,26 +23,30 @@ public class ProdottiController {
         this.prodottiService = prodottiService;
     }
 
-    @PostMapping("/creaProdotto")
+    @PostMapping
     public ResponseEntity<ProdottiDto> creaProdotto(@RequestBody @Valid CreaProdottiDto prodotto) {
         return ResponseEntity.ok(prodottiService.creaProdotto(prodotto));
     }
 
-    @GetMapping("/getAllProdotti")
+    @GetMapping
     public ResponseEntity<List<ProdottiDto>> getAllProdotti() {
         return ResponseEntity.ok(prodottiService.getAllProdotti());
     }
 
-    @GetMapping("/getProdottiByContainingNome")
-    public ResponseEntity<List<ProdottiDto>> getProdottiByContainingNome(
+    @GetMapping("/categorie")
+    public ResponseEntity<List<String>> getAllCategorie() {
+        return ResponseEntity.ok(prodottiService.getAllCategorie());
+    }
+
+    @GetMapping("/cerca")
+    public ResponseEntity<List<ProdottiDto>> cercaProdottiPerNome(
             @RequestParam @NotBlank String nomeProdotto) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingNome(nomeProdotto));
     }
 
-    @GetMapping("/getProdottiByContainingCategoria")
-    public ResponseEntity<List<ProdottiDto>> getProdottiByContainingCategoria(
+    @GetMapping("/cerca/categoria")
+    public ResponseEntity<List<ProdottiDto>> cercaProdottiPerCategoria(
             @RequestParam @NotBlank String nomeCategoria) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingCategoria(nomeCategoria));
     }
-
 }

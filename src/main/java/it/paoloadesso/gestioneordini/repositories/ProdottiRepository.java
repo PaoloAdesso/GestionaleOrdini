@@ -2,6 +2,7 @@ package it.paoloadesso.gestioneordini.repositories;
 
 import it.paoloadesso.gestioneordini.entities.ProdottiEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +15,7 @@ public interface ProdottiRepository extends JpaRepository<ProdottiEntity, Long> 
     List<ProdottiEntity> findByNomeContainingIgnoreCase (String nomeProdotto);
 
     List<ProdottiEntity> findByCategoriaContainingIgnoreCase (String nomeCategoria);
+
+    @Query("SELECT DISTINCT p.categoria FROM ProdottiEntity p ORDER BY p.categoria")
+    List<String> findAllCategorieDistinct();
 }

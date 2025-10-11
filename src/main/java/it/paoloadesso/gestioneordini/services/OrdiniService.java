@@ -97,6 +97,15 @@ public class OrdiniService {
         return ordineDto;
     }
 
+    public List<OrdiniDto> getListaTuttiOrdiniAperti() {
+        // Cerco tutti gli ordini che NON sono chiusi
+        List<OrdiniEntity> ordini = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
+        // Converto ogni Entity in DTO
+        return ordini.stream()
+                .map(el -> ordiniMapper.ordiniEntityToDto(el))
+                .collect(Collectors.toList());
+    }
+
     public List<OrdiniDto> getListaOrdiniApertiByTavolo(Long idTavolo) {
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);
@@ -110,49 +119,14 @@ public class OrdiniService {
                 .collect(Collectors.toList());
     }
 
-    private void controlloSeIlTavoloEsiste(Long idTavolo) {
-        if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
-        }
-    }
-
-    public List<OrdiniDto> getListaTuttiOrdiniAperti() {
-        // Cerco tutti gli ordini che NON sono chiusi
-        List<OrdiniEntity> ordini = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
-        // Converto ogni Entity in DTO
-        return ordini.stream()
-                .map(el -> ordiniMapper.ordiniEntityToDto(el))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Trova gli ordini con TUTTI i loro prodotti per un tavolo specifico.
-     * Questo è più complesso del metodo sopra perché oltre ai dati dell'ordine
-     * voglio anche sapere QUALI prodotti ci sono in ogni ordine.
-     */
-    public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineByIdTavolo(
-            @NotNull @Positive Long idTavolo) {
-
-        // Controllo che il tavolo esista
-        controlloSeIlTavoloEsiste(idTavolo);
-
-        // Cerco tutte le righe della tabella ponte ordini_prodotti
-        // per questo tavolo, ma solo per ordini NON chiusi
-        List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
-                .findByOrdine_Tavolo_IdAndOrdine_StatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
-
-        // Uso il metodo di aiuto per costruire la risposta
-        return costruzioneDettagliOrdine(righe);
-    }
-
-    public List<OrdiniDto> getListaOrdiniDiOggi() {
+    public List<OrdiniDto> getOrdiniDiOggi() {
         // Cerco ordini con data di oggi che NON sono chiusi
         List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(LocalDate.now(), StatoOrdine.CHIUSO);
         // Uso method reference per convertire Entity in DTO
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
 
-    public List<OrdiniDto> getListaOrdiniDiOggiByTavolo(@NotNull @Positive Long idTavolo) {
+    public List<OrdiniDto> getOrdiniOggiByTavolo(@NotNull @Positive Long idTavolo) {
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);
         // Cerco ordini di questo tavolo, di oggi, che NON sono chiusi
@@ -161,7 +135,27 @@ public class OrdiniService {
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
 
-    public List<ListaOrdiniEProdottiByTavoloResponseDto> getListaDettaglioOrdineDiOggiByIdTavolo(
+    /**
+     * Trova gli ordini con TUTTI i loro prodotti per un tavolo specifico.
+     * Questo è più complesso del metodo sopra perché oltre ai dati dell'ordine
+     * voglio anche sapere QUALI prodotti ci sono in ogni ordine.
+     */
+    public List<ListaOrdiniEProdottiByTavoloResponseDto> getDettaglioOrdineByIdTavolo(
+            @NotNull @Positive Long idTavolo) {
+
+        // Controllo che il tavolo esista
+        controlloSeIlTavoloEsiste(idTavolo);
+
+        // Cerco tutte le righe della tabella ponte ordini_prodotti
+        // per questo tavolo, ma solo per ordini NON chiusi
+        List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
+                .findByOrdineTavoloIdAndOrdineStatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
+
+        // Uso il metodo di aiuto per costruire la risposta
+        return costruzioneDettagliOrdine(righe);
+    }
+
+    public List<ListaOrdiniEProdottiByTavoloResponseDto> getDettaglioOrdineDiOggiByIdTavolo(
             @NotNull @Positive Long idTavolo) {
 
         // Controllo esistenza tavolo
@@ -174,42 +168,9 @@ public class OrdiniService {
         return costruzioneDettagliOrdine(righe);
     }
 
-    /**
-     * Metodo di aiuto: trasforma una lista di righe ordini_prodotti in DTO completi.
-     * Con questo riesco a raggruppare le righe per ordine e per ogni ordine creare un
-     * DTO con la lista dei suoi prodotti.
-     */
-    private List<ListaOrdiniEProdottiByTavoloResponseDto> costruzioneDettagliOrdine(List<OrdiniProdottiEntity> righe) {
-        // Raggruppo tutte le righe per ID ordine
-        // Risultato: una mappa dove la chiave è l'ID ordine e il valore è la lista delle sue righe
-        Map<Long, List<OrdiniProdottiEntity>> byOrdine = righe.stream()
-                .collect(Collectors.groupingBy(r -> r.getOrdine().getIdOrdine()));
-
-        // Per ogni gruppo di righe (che rappresenta un ordine)
-        return byOrdine.values().stream().map(righeOrdine -> {
-            // Prendo la prima riga per avere i dati base dell'ordine
-            // (tutte le righe hanno gli stessi dati ordine, cambiano solo i prodotti)
-            ListaOrdiniEProdottiByTavoloResponseDto dtoBase =
-                    ordiniMapper.ordiniProdottiEntityToDto(righeOrdine.get(0));
-
-            // Creo la lista dei prodotti scorrendo tutte le righe di questo ordine
-            List<ProdottiOrdinatiResponseDto> prodotti = righeOrdine.stream().map(e -> {
-                // Per ogni riga creo un DTO prodotto
-                ProdottiOrdinatiResponseDto p = new ProdottiOrdinatiResponseDto();
-                p.setIdProdotto(e.getProdotto().getId());
-                p.setQuantitaProdotto(e.getQuantitaProdotto());
-                p.setStatoPagato(e.getStatoPagato());
-                return p;
-            }).toList();
-
-            // Attacco la lista prodotti al DTO base dell'ordine
-            dtoBase.setListaOrdineERelativiProdotti(prodotti);
-            return dtoBase;
-        }).toList();
-    }
-
     @Transactional
-    public RisultatoModificaOrdineDto modificaOrdine(Long idOrdine, @Valid ModificaOrdineRequestDto requestDto) {
+    public RisultatoModificaOrdineDto modificaOrdine(
+            Long idOrdine, @Valid ModificaOrdineRequestDto requestDto) {
         // Prima controllo: la richiesta deve contenere almeno una modifica
         if (requestDto.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -290,12 +251,52 @@ public class OrdiniService {
 
         // Ricarico tutti i prodotti dell'ordine per la risposta aggiornata
         List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
-                .findByOrdine_IdOrdine(idOrdine);
+                .findByOrdineIdOrdine(idOrdine);
 
         ListaOrdiniEProdottiByTavoloResponseDto ordineAggiornato = costruzioneDettagliOrdine(righe).get(0);
 
         // Creo il risultato con informazioni complete su successi e fallimenti
         return creaRisultatoModifica(ordineAggiornato, prodottiAggiunti, prodottiRimossi, errori, requestDto);
+    }
+
+    private void controlloSeIlTavoloEsiste(Long idTavolo) {
+        if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
+        }
+    }
+
+    /**
+     * Metodo di aiuto: trasforma una lista di righe ordini_prodotti in DTO completi.
+     * Con questo riesco a raggruppare le righe per ordine e per ogni ordine creare un
+     * DTO con la lista dei suoi prodotti.
+     */
+    private List<ListaOrdiniEProdottiByTavoloResponseDto> costruzioneDettagliOrdine(List<OrdiniProdottiEntity> righe) {
+        // Raggruppo tutte le righe per ID ordine
+        // Risultato: una mappa dove la chiave è l'ID ordine e il valore è la lista delle sue righe
+        Map<Long, List<OrdiniProdottiEntity>> byOrdine = righe.stream()
+                .collect(Collectors.groupingBy(r -> r.getOrdine().getIdOrdine()));
+
+        // Per ogni gruppo di righe (che rappresenta un ordine)
+        return byOrdine.values().stream().map(righeOrdine -> {
+            // Prendo la prima riga per avere i dati base dell'ordine
+            // (tutte le righe hanno gli stessi dati ordine, cambiano solo i prodotti)
+            ListaOrdiniEProdottiByTavoloResponseDto dtoBase =
+                    ordiniMapper.ordiniProdottiEntityToDto(righeOrdine.get(0));
+
+            // Creo la lista dei prodotti scorrendo tutte le righe di questo ordine
+            List<ProdottiOrdinatiResponseDto> prodotti = righeOrdine.stream().map(e -> {
+                // Per ogni riga creo un DTO prodotto
+                ProdottiOrdinatiResponseDto p = new ProdottiOrdinatiResponseDto();
+                p.setIdProdotto(e.getProdotto().getId());
+                p.setQuantitaProdotto(e.getQuantitaProdotto());
+                p.setStatoPagato(e.getStatoPagato());
+                return p;
+            }).toList();
+
+            // Attacco la lista prodotti al DTO base dell'ordine
+            dtoBase.setListaOrdineERelativiProdotti(prodotti);
+            return dtoBase;
+        }).toList();
     }
 
     /**
@@ -351,8 +352,8 @@ public class OrdiniService {
         OrdiniProdottiEntity ordineEsistente = ordiniProdottiRepository.findById(chiave)
                 .orElseThrow(() -> new RuntimeException("non presente nell'ordine"));
 
-        Integer quantitaAttuale = ordineEsistente.getQuantitaProdotto();
-        Integer quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
+        int quantitaAttuale = ordineEsistente.getQuantitaProdotto();
+        int quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
 
         // Controllo che non stia provando a rimuovere più di quello che c'è
         if (quantitaDaRimuovere > quantitaAttuale) {
@@ -360,7 +361,7 @@ public class OrdiniService {
                     ") maggiore di quella presente (" + quantitaAttuale + ")");
         }
 
-        Integer quantitaFinale = quantitaAttuale - quantitaDaRimuovere;
+        int quantitaFinale = quantitaAttuale - quantitaDaRimuovere;
 
         if (quantitaFinale == 0) {
             // CASO 1: Rimuovo tutto - cancello la riga
@@ -373,7 +374,6 @@ public class OrdiniService {
 
         return true;
     }
-
 
     /**
      * Metodo di aiuto: crea il DTO risultato con le informazioni complete

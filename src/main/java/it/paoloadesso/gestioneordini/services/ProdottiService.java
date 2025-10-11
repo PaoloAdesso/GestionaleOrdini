@@ -42,6 +42,10 @@ public class ProdottiService {
                 .toList();
     }
 
+    public List<String> getAllCategorie() {
+        return prodottiRepository.findAllCategorieDistinct();
+    }
+
     public List<ProdottiDto> getProdottiByContainingNome(@NotBlank String nomeProdotto) {
         List<ProdottiEntity> entities = prodottiRepository.findByNomeContainingIgnoreCase(nomeProdotto.trim());
         return entities.stream()
@@ -59,4 +63,6 @@ public class ProdottiService {
                 .map(prodottiMapper::prodottiEntityToDto)
                 .toList();
     }
+
+
 }

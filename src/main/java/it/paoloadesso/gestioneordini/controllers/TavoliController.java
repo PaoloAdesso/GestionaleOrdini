@@ -5,12 +5,14 @@ import it.paoloadesso.gestioneordini.dto.TavoliDto;
 import it.paoloadesso.gestioneordini.services.TavoliService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("tavoli")
+@Validated
 public class TavoliController {
     private final TavoliService tavoliService;
 
@@ -18,29 +20,33 @@ public class TavoliController {
         this.tavoliService = tavoliService;
     }
 
-    @PostMapping("/creaTavolo")
+    @PostMapping
     public ResponseEntity<TavoliDto> creaTavolo(@RequestBody @Valid CreaTavoliDto tavolo) {
         return ResponseEntity.ok(tavoliService.creaTavolo(tavolo));
     }
 
-    @PutMapping("/aggiornaTavolo")
-    public ResponseEntity<TavoliDto> aggiornaTavolo(@RequestBody @Valid  TavoliDto tavolo) {
-        return ResponseEntity.ok(tavoliService.aggiornaTavolo(tavolo));
-    }
-
-    @GetMapping("/getListaTavoli")
+    @GetMapping
     public ResponseEntity<List<TavoliDto>> getListaTavoli() {
         return ResponseEntity.ok(tavoliService.getTavoli());
+    }
+
+    @GetMapping("/liberi")
+    public ResponseEntity<List<TavoliDto>> getListaTavoliLiberi() {
+        return ResponseEntity.ok(tavoliService.getTavoliLiberi());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TavoliDto> aggiornaTavolo(
+            @PathVariable Long id,
+            @RequestBody @Valid TavoliDto tavolo
+    ) {
+        tavolo.setId(id);
+        return ResponseEntity.ok(tavoliService.aggiornaTavolo(tavolo));
     }
 
     @DeleteMapping("/{idTavolo}")
     public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
         tavoliService.deleteTavoloById(idTavolo);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/getListaTavoliLiberi")
-    public ResponseEntity<List<TavoliDto>> getListaTavoliLiberi() {
-        return ResponseEntity.ok(tavoliService.getTavoliLiberi());
     }
 }
