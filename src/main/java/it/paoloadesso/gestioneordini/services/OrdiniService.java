@@ -308,7 +308,10 @@ public class OrdiniService {
 
         // Controllo che il prodotto esista nel database
         ProdottiEntity prodottoEntity = prodottiRepository.findById(prodotto.getIdProdotto())
-                .orElseThrow(() -> new RuntimeException("non trovato nel menu"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prodotto con ID " + prodotto.getIdProdotto() + " non trovato nel menu"
+                ));
 
         // Creo la chiave per controllare se il prodotto è già nell'ordine
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, prodotto.getIdProdotto());
@@ -350,15 +353,21 @@ public class OrdiniService {
 
         // Controllo se il prodotto è presente nell'ordine
         OrdiniProdottiEntity ordineEsistente = ordiniProdottiRepository.findById(chiave)
-                .orElseThrow(() -> new RuntimeException("non presente nell'ordine"));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Prodotto con ID " + prodotto.getIdProdotto() + " non presente nell'ordine"
+                ));
 
         int quantitaAttuale = ordineEsistente.getQuantitaProdotto();
         int quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
 
         // Controllo che non stia provando a rimuovere più di quello che c'è
         if (quantitaDaRimuovere > quantitaAttuale) {
-            throw new RuntimeException("quantità da rimuovere (" + quantitaDaRimuovere +
-                    ") maggiore di quella presente (" + quantitaAttuale + ")");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Quantità da rimuovere (" + quantitaDaRimuovere +
+                            ") maggiore di quella presente (" + quantitaAttuale + ")"
+            );
         }
 
         int quantitaFinale = quantitaAttuale - quantitaDaRimuovere;
