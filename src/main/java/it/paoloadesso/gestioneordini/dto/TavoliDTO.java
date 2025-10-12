@@ -4,7 +4,7 @@ import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public class TavoliDto {
+public class TavoliDTO {
 
     @NotNull
     private Long id;
@@ -15,13 +15,13 @@ public class TavoliDto {
     @NotNull
     private StatoTavolo statoTavolo;
 
-    public TavoliDto(Long id, String numeroNomeTavolo, StatoTavolo statoTavolo) {
+    public TavoliDTO(Long id, String numeroNomeTavolo, StatoTavolo statoTavolo) {
         this.id = id;
         this.numeroNomeTavolo = numeroNomeTavolo;
         this.statoTavolo = statoTavolo;
     }
 
-    public TavoliDto() {
+    public TavoliDTO() {
         this.statoTavolo = StatoTavolo.LIBERO;
     }
 

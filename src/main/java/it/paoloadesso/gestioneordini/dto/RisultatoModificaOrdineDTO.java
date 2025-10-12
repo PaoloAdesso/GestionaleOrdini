@@ -3,21 +3,21 @@ package it.paoloadesso.gestioneordini.dto;
 import java.util.List;
 
 /**
- * DTO per gestire i risultati delle modifiche agli ordini.
- * Permette di gestire successi parziali quando alcuni prodotti
- * vengono aggiunti correttamente e altri danno errore.
+ * Questo DTO gestisce i risultati delle modifiche agli ordini.
+ * È utile quando alcuni prodotti vengono aggiunti correttamente ma altri danno errore,
+ * così posso comunicare all'utente cosa è andato bene e cosa no (successo parziale).
  */
-public class RisultatoModificaOrdineDto {
+public class RisultatoModificaOrdineDTO {
 
-    private ListaOrdiniEProdottiByTavoloResponseDto ordine;
+    private ListaOrdiniEProdottiByTavoloResponseDTO ordine;
     private int prodottiAggiunti;
     private List<String> errori;
     private boolean operazioneCompleta;
     private String messaggio;
 
-    public RisultatoModificaOrdineDto() {}
+    public RisultatoModificaOrdineDTO() {}
 
-    public RisultatoModificaOrdineDto(ListaOrdiniEProdottiByTavoloResponseDto ordine,
+    public RisultatoModificaOrdineDTO(ListaOrdiniEProdottiByTavoloResponseDTO ordine,
                                       int prodottiAggiunti,
                                       List<String> errori,
                                       boolean operazioneCompleta,
@@ -29,8 +29,8 @@ public class RisultatoModificaOrdineDto {
         this.messaggio = messaggio;
     }
 
-    public ListaOrdiniEProdottiByTavoloResponseDto getOrdine() { return ordine; }
-    public void setOrdine(ListaOrdiniEProdottiByTavoloResponseDto ordine) { this.ordine = ordine; }
+    public ListaOrdiniEProdottiByTavoloResponseDTO getOrdine() { return ordine; }
+    public void setOrdine(ListaOrdiniEProdottiByTavoloResponseDTO ordine) { this.ordine = ordine; }
 
     public int getProdottiAggiunti() { return prodottiAggiunti; }
     public void setProdottiAggiunti(int prodottiAggiunti) { this.prodottiAggiunti = prodottiAggiunti; }

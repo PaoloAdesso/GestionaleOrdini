@@ -1,7 +1,7 @@
 package it.paoloadesso.gestioneordini.services;
 
-import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
-import it.paoloadesso.gestioneordini.dto.TavoliDto;
+import it.paoloadesso.gestioneordini.dto.CreaTavoliDTO;
+import it.paoloadesso.gestioneordini.dto.TavoliDTO;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
@@ -26,7 +26,7 @@ public class TavoliService {
     }
 
     @Transactional
-    public TavoliDto creaTavolo(CreaTavoliDto dto) {
+    public TavoliDTO creaTavolo(CreaTavoliDTO dto) {
         if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
         }
@@ -35,18 +35,18 @@ public class TavoliService {
         return tavoliMapper.entityToDto(tavolo);
     }
 
-    public List<TavoliDto> getTavoli() {
+    public List<TavoliDTO> getTavoli() {
         List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
-        List<TavoliDto> tavoliResponseDto;
+        List<TavoliDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
                 .map(el->tavoliMapper.entityToDto(el))
                 .toList();
         return tavoliResponseDto;
     }
 
-    public List<TavoliDto> getTavoliLiberi() {
+    public List<TavoliDTO> getTavoliLiberi() {
         List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
-        List<TavoliDto> tavoliResponseDto;
+        List<TavoliDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
                 .map(el->tavoliMapper.entityToDto(el))
                 .toList();
@@ -54,19 +54,17 @@ public class TavoliService {
     }
 
     @Transactional
-    public TavoliDto aggiornaTavolo(TavoliDto dtoTavolo) {
-        // Verifico se l'id del tavolo esiste
-        TavoliEntity tavolo = tavoliRepository.findById(dtoTavolo.getId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Tavolo con ID " + dtoTavolo.getId() + " non trovato."));
+    public TavoliDTO aggiornaTavolo(Long id, TavoliDTO dtoTavolo) {
+        if (!tavoliRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
+                    "Tavolo con ID " + id + " non trovato.");
+        }
 
-        // Aggiorno i campi dell'entity con quelli del DTO
-        tavolo.setNumeroNomeTavolo(dtoTavolo.getNumeroNomeTavolo());
-        tavolo.setStatoTavolo(dtoTavolo.getStatoTavolo());
-        // Salvo l'entity aggiornata
+        // Uso il mapper per convertire DTO → Entity
+        TavoliEntity tavolo = tavoliMapper.dtoToEntity(dtoTavolo);
+        tavolo.setId(id);  // Setto l'ID manualmente
+
         TavoliEntity tavoloAggiornato = tavoliRepository.save(tavolo);
-
-        // Mappo l'entity salvata a DTO e lo restituisco
         return tavoliMapper.entityToDto(tavoloAggiornato);
     }
 

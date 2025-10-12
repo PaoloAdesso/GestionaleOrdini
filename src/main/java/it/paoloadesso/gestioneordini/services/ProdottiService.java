@@ -24,7 +24,7 @@ public class ProdottiService {
     }
 
     @Transactional
-    public ProdottiDto creaProdotto(CreaProdottiDto dto) {
+    public ProdottiDTO creaProdotto(CreaProdottiDTO dto) {
         //controllo se il prodotto esiste
         if (prodottiRepository.existsByNomeIgnoreCase(dto.getNome())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il prodotto «" + dto.getNome() + "» è già presente");
@@ -34,7 +34,7 @@ public class ProdottiService {
         return prodottiMapper.prodottiEntityToDto(prodotto);
     }
 
-    public List<ProdottiDto> getAllProdotti() {
+    public List<ProdottiDTO> getAllProdotti() {
         List<ProdottiEntity> entities = prodottiRepository.findAll();
 
         return entities.stream()
@@ -46,14 +46,14 @@ public class ProdottiService {
         return prodottiRepository.findAllCategorieDistinct();
     }
 
-    public List<ProdottiDto> getProdottiByContainingNome(@NotBlank String nomeProdotto) {
+    public List<ProdottiDTO> getProdottiByContainingNome(@NotBlank String nomeProdotto) {
         List<ProdottiEntity> entities = prodottiRepository.findByNomeContainingIgnoreCase(nomeProdotto.trim());
         return entities.stream()
                 .map(prodottiMapper::prodottiEntityToDto)
                 .toList();
     }
 
-    public List<ProdottiDto> getProdottiByContainingCategoria(String nomeCategoria) {
+    public List<ProdottiDTO> getProdottiByContainingCategoria(String nomeCategoria) {
         if (nomeCategoria == null || nomeCategoria.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il nome della categoria non può essere vuoto.");
         }

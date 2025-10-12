@@ -3,7 +3,7 @@ package it.paoloadesso.gestioneordini.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public class ProdottiDaRimuovereDto {
+public class ProdottiDaRimuovereDTO {
 
     @NotNull
     @Positive
@@ -13,9 +13,9 @@ public class ProdottiDaRimuovereDto {
     @Positive
     private Integer quantitaDaRimuovere;
 
-    public ProdottiDaRimuovereDto() {}
+    public ProdottiDaRimuovereDTO() {}
 
-    public ProdottiDaRimuovereDto(Long idProdotto, Integer quantitaDaRimuovere) {
+    public ProdottiDaRimuovereDTO(Long idProdotto, Integer quantitaDaRimuovere) {
         this.idProdotto = idProdotto;
         this.quantitaDaRimuovere = quantitaDaRimuovere;
     }

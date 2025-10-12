@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDate;
 
-public class OrdiniDto {
+public class OrdiniDTO {
 
     @NotNull
     private Long idOrdine;
@@ -19,10 +19,10 @@ public class OrdiniDto {
     @NotNull
     private StatoOrdine statoOrdine;
 
-    public OrdiniDto() {
+    public OrdiniDTO() {
     }
 
-    public OrdiniDto(Long idOrdine, Long idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine) {
+    public OrdiniDTO(Long idOrdine, Long idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine) {
         this.idOrdine = idOrdine;
         this.idTavolo = idTavolo;
         this.dataOrdine = dataOrdine;

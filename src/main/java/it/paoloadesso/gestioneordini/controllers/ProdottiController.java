@@ -1,7 +1,7 @@
 package it.paoloadesso.gestioneordini.controllers;
 
-import it.paoloadesso.gestioneordini.dto.CreaProdottiDto;
-import it.paoloadesso.gestioneordini.dto.ProdottiDto;
+import it.paoloadesso.gestioneordini.dto.CreaProdottiDTO;
+import it.paoloadesso.gestioneordini.dto.ProdottiDTO;
 import it.paoloadesso.gestioneordini.services.ProdottiService;
 import jakarta.validation.Valid;
 
@@ -24,12 +24,12 @@ public class ProdottiController {
     }
 
     @PostMapping
-    public ResponseEntity<ProdottiDto> creaProdotto(@RequestBody @Valid CreaProdottiDto prodotto) {
+    public ResponseEntity<ProdottiDTO> creaProdotto(@RequestBody @Valid CreaProdottiDTO prodotto) {
         return ResponseEntity.ok(prodottiService.creaProdotto(prodotto));
     }
 
     @GetMapping
-    public ResponseEntity<List<ProdottiDto>> getAllProdotti() {
+    public ResponseEntity<List<ProdottiDTO>> getAllProdotti() {
         return ResponseEntity.ok(prodottiService.getAllProdotti());
     }
 
@@ -39,13 +39,13 @@ public class ProdottiController {
     }
 
     @GetMapping("/cerca")
-    public ResponseEntity<List<ProdottiDto>> cercaProdottiPerNome(
+    public ResponseEntity<List<ProdottiDTO>> cercaProdottiPerNome(
             @RequestParam @NotBlank String nomeProdotto) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingNome(nomeProdotto));
     }
 
     @GetMapping("/cerca/categoria")
-    public ResponseEntity<List<ProdottiDto>> cercaProdottiPerCategoria(
+    public ResponseEntity<List<ProdottiDTO>> cercaProdottiPerCategoria(
             @RequestParam @NotBlank String nomeCategoria) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingCategoria(nomeCategoria));
     }

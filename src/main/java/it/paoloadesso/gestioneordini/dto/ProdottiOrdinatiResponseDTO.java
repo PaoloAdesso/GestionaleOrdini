@@ -4,7 +4,7 @@ import it.paoloadesso.gestioneordini.enums.StatoPagato;
 
 import java.util.Objects;
 
-public class ProdottiOrdinatiResponseDto {
+public class ProdottiOrdinatiResponseDTO {
         private Long idProdotto;
         private Integer quantitaProdotto;
         private StatoPagato statoPagato;
@@ -36,7 +36,7 @@ public class ProdottiOrdinatiResponseDto {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        ProdottiOrdinatiResponseDto that = (ProdottiOrdinatiResponseDto) o;
+        ProdottiOrdinatiResponseDTO that = (ProdottiOrdinatiResponseDTO) o;
         return Objects.equals(idProdotto, that.idProdotto) && Objects.equals(quantitaProdotto, that.quantitaProdotto) && statoPagato == that.statoPagato;
     }
 
@@ -45,10 +45,10 @@ public class ProdottiOrdinatiResponseDto {
         return Objects.hash(idProdotto, quantitaProdotto, statoPagato);
     }
 
-    public ProdottiOrdinatiResponseDto() {
+    public ProdottiOrdinatiResponseDTO() {
     }
 
-    public ProdottiOrdinatiResponseDto(Long idProdotto, Integer quantitaProdotto, StatoPagato statoPagato) {
+    public ProdottiOrdinatiResponseDTO(Long idProdotto, Integer quantitaProdotto, StatoPagato statoPagato) {
         this.idProdotto = idProdotto;
         this.quantitaProdotto = quantitaProdotto;
         this.statoPagato = statoPagato;

@@ -5,16 +5,16 @@ import it.paoloadesso.gestioneordini.enums.StatoOrdine;
 import java.time.LocalDate;
 import java.util.List;
 
-public class ListaOrdiniEProdottiByTavoloResponseDto {
+public class ListaOrdiniEProdottiByTavoloResponseDTO {
 
     private Long idOrdine;
     private Long idTavolo;
     private LocalDate dataOrdine;
     private StatoOrdine statoOrdine;
 
-    private List<ProdottiOrdinatiResponseDto> listaOrdineERelativiProdotti;
+    private List<ProdottiOrdinatiResponseDTO> listaOrdineERelativiProdotti;
 
-    public ListaOrdiniEProdottiByTavoloResponseDto(Long idOrdine, Long idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine, List<ProdottiOrdinatiResponseDto> listaOrdineERelativiProdotti) {
+    public ListaOrdiniEProdottiByTavoloResponseDTO(Long idOrdine, Long idTavolo, LocalDate dataOrdine, StatoOrdine statoOrdine, List<ProdottiOrdinatiResponseDTO> listaOrdineERelativiProdotti) {
         this.idOrdine = idOrdine;
         this.idTavolo = idTavolo;
         this.dataOrdine = dataOrdine;
@@ -22,7 +22,7 @@ public class ListaOrdiniEProdottiByTavoloResponseDto {
         this.listaOrdineERelativiProdotti = listaOrdineERelativiProdotti;
     }
 
-    public ListaOrdiniEProdottiByTavoloResponseDto() {
+    public ListaOrdiniEProdottiByTavoloResponseDTO() {
     }
 
     public Long getIdOrdine() {
@@ -56,11 +56,11 @@ public class ListaOrdiniEProdottiByTavoloResponseDto {
     public void setStatoOrdine(StatoOrdine statoOrdine) {
         this.statoOrdine = statoOrdine;
     }
-    public List<ProdottiOrdinatiResponseDto> getListaOrdineERelativiProdotti() {
+    public List<ProdottiOrdinatiResponseDTO> getListaOrdineERelativiProdotti() {
         return listaOrdineERelativiProdotti;
     }
 
-    public void setListaOrdineERelativiProdotti(List<ProdottiOrdinatiResponseDto> listaOrdineERelativiProdotti) {
+    public void setListaOrdineERelativiProdotti(List<ProdottiOrdinatiResponseDTO> listaOrdineERelativiProdotti) {
         this.listaOrdineERelativiProdotti = listaOrdineERelativiProdotti;
     }
 }

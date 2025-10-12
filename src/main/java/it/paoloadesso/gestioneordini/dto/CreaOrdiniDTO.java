@@ -5,14 +5,14 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public class CreaOrdiniDto {
+public class CreaOrdiniDTO {
     @NotNull
     private Long idTavolo;
 
     @NotEmpty
-    private List<ProdottiOrdinatiRequestDto> listaProdottiOrdinati;
+    private List<ProdottiOrdinatiRequestDTO> listaProdottiOrdinati;
 
-    public CreaOrdiniDto() {
+    public CreaOrdiniDTO() {
     }
 
     public Long getIdTavolo() {
@@ -23,15 +23,15 @@ public class CreaOrdiniDto {
         this.idTavolo = idTavolo;
     }
 
-    public List<ProdottiOrdinatiRequestDto> getListaProdottiOrdinati() {
+    public List<ProdottiOrdinatiRequestDTO> getListaProdottiOrdinati() {
         return listaProdottiOrdinati;
     }
 
-    public void setListaProdottiOrdinati(List<ProdottiOrdinatiRequestDto> listaProdottiOrdinati) {
+    public void setListaProdottiOrdinati(List<ProdottiOrdinatiRequestDTO> listaProdottiOrdinati) {
         this.listaProdottiOrdinati = listaProdottiOrdinati;
     }
 
-    public CreaOrdiniDto(Long idTavolo, List<ProdottiOrdinatiRequestDto> listaProdottiOrdinati) {
+    public CreaOrdiniDTO(Long idTavolo, List<ProdottiOrdinatiRequestDTO> listaProdottiOrdinati) {
         this.idTavolo = idTavolo;
         this.listaProdottiOrdinati = listaProdottiOrdinati;
     }

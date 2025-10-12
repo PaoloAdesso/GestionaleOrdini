@@ -22,50 +22,50 @@ public class OrdiniController {
     }
 
     @PostMapping
-    public ResponseEntity<OrdiniDto> creaOrdine(@RequestBody @Valid CreaOrdiniDto ordine) {
+    public ResponseEntity<OrdiniDTO> creaOrdine(@RequestBody @Valid CreaOrdiniDTO ordine) {
         return ResponseEntity.ok(ordiniService.creaOrdine(ordine));
     }
 
     @GetMapping
-    public ResponseEntity<List<OrdiniDto>> getListaTuttiOrdiniAperti() {
+    public ResponseEntity<List<OrdiniDTO>> getListaTuttiOrdiniAperti() {
         return ResponseEntity.ok(ordiniService.getListaTuttiOrdiniAperti());
     }
 
     @GetMapping("/oggi")
-    public ResponseEntity<List<OrdiniDto>> getOrdiniDiOggi() {
+    public ResponseEntity<List<OrdiniDTO>> getOrdiniDiOggi() {
         return ResponseEntity.ok(ordiniService.getOrdiniDiOggi());
     }
 
     @GetMapping("/tavolo/{idTavolo}")
-    public ResponseEntity<List<OrdiniDto>> getListaOrdiniApertiPerTavolo(@PathVariable @Positive Long idTavolo) {
-        List<OrdiniDto> listaOrdini = ordiniService.getListaOrdiniApertiByTavolo(idTavolo);
+    public ResponseEntity<List<OrdiniDTO>> getListaOrdiniApertiPerTavolo(@PathVariable @Positive Long idTavolo) {
+        List<OrdiniDTO> listaOrdini = ordiniService.getListaOrdiniApertiByTavolo(idTavolo);
         return ResponseEntity.ok(listaOrdini);
     }
 
     @GetMapping("/tavolo/{idTavolo}/oggi")
-    public ResponseEntity<List<OrdiniDto>> getOrdiniDiOggiPerTavolo(
+    public ResponseEntity<List<OrdiniDTO>> getOrdiniDiOggiPerTavolo(
             @PathVariable @Positive Long idTavolo) {
         return ResponseEntity.ok(ordiniService.getOrdiniOggiByTavolo(idTavolo));
     }
 
     @GetMapping("/tavolo/{idTavolo}/dettagli")
-    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDto>> getDettagliOrdiniPerTavolo
+    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDTO>> getDettagliOrdiniPerTavolo
             (@PathVariable @Positive Long idTavolo) {
         return ResponseEntity.ok(ordiniService.getDettaglioOrdineByIdTavolo(idTavolo));
     }
 
     @GetMapping("/tavolo/{idTavolo}/dettagli/oggi")
-    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDto>> getDettagliOrdiniOggiPerTavolo
+    public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDTO>> getDettagliOrdiniOggiPerTavolo
             (@PathVariable @Positive Long idTavolo) {
         return ResponseEntity.ok(ordiniService.getDettaglioOrdineDiOggiByIdTavolo(idTavolo));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<RisultatoModificaOrdineDto> modificaOrdine(
+    public ResponseEntity<RisultatoModificaOrdineDTO> modificaOrdine(
             @PathVariable Long id,
-            @Valid @RequestBody ModificaOrdineRequestDto requestDto) {
+            @Valid @RequestBody ModificaOrdineRequestDTO requestDto) {
 
-        RisultatoModificaOrdineDto risultato = ordiniService.modificaOrdine(id, requestDto);
+        RisultatoModificaOrdineDTO risultato = ordiniService.modificaOrdine(id, requestDto);
 
         if (risultato.isOperazioneCompleta()) {
             return ResponseEntity.ok(risultato);

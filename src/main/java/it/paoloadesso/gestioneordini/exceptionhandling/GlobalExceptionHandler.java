@@ -17,7 +17,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Ho messo queste parole in costanti così se le devo cambiare lo faccio una volta sola
+    // Metto queste stringhe in costanti così se devo cambiarle lo faccio una volta sola
     private static final String TIMESTAMP = "timestamp";
     private static final String STATUS = "status";
     private static final String ERROR = "error";
@@ -25,8 +25,8 @@ public class GlobalExceptionHandler {
 
     /**
      * Questo metodo cattura gli errori che lancio io nei Service.
-     * Per esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
-     * Prende il messaggio che ho scritto io e lo manda all'utente in formato JSON.
+     * Ad esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
+     * Prende il messaggio che ho scritto e lo restituisce in formato JSON.
      */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleBusinessErrors(ResponseStatusException ex) {
@@ -35,28 +35,27 @@ public class GlobalExceptionHandler {
         response.put(TIMESTAMP, LocalDateTime.now());
         response.put(STATUS, ex.getStatusCode().value());
         response.put(ERROR, ex.getStatusCode().toString());
-        response.put(MESSAGE, ex.getReason()); // Il messaggio d'errore che ho scritto nel Service
+        response.put(MESSAGE, ex.getReason()); // Questo è il messaggio che ho scritto nel Service
 
         return new ResponseEntity<>(response, ex.getStatusCode());
     }
 
     /**
-     * Questo metodo cattura 4 tipi di errori di validazione diversi.
-     * Uso instanceof per capire di che tipo è l'errore e comportarmi di conseguenza.
-     * È come avere un solo dottore che cura 4 malattie diverse.
+     * Questo metodo cattura 4 tipi diversi di errori di validazione.
+     * Uso instanceof per capire che tipo di errore è e comportarmi di conseguenza.
      */
     @ExceptionHandler({
-            MethodArgumentNotValidException.class,    // Errori sui DTO (quando @Valid fallisce)
-            ConstraintViolationException.class,       // Errori sui parametri URL (quando @Positive fallisce)
-            MissingServletRequestParameterException.class, // Parametri mancanti
-            MethodArgumentTypeMismatchException.class      // Tipi sbagliati (testo invece di numero)
+            MethodArgumentNotValidException.class,    // Errori sui DTO quando @Valid fallisce
+            ConstraintViolationException.class,       // Errori sui parametri URL quando @Positive fallisce
+            MissingServletRequestParameterException.class, // Quando manca un parametro obbligatorio
+            MethodArgumentTypeMismatchException.class      // Quando il tipo è sbagliato, ad esempio: testo invece di numero
     })
     public ResponseEntity<?> handleValidationErrors(Exception ex) {
 
-        // Caso speciale: errori sui DTO restituiscono una mappa campo->errore
+        // Caso speciale: per gli errori sui DTO restituisco una mappa campo→errore
         if (ex instanceof MethodArgumentNotValidException validationEx) {
             Map<String, String> errors = new HashMap<>();
-            // Per ogni campo sbagliato nel DTO, metto campo->messaggio di errore
+            // Per ogni campo sbagliato nel DTO, metto: nomeCampo → messaggioErrore
             validationEx.getBindingResult().getFieldErrors().forEach(error ->
                     errors.put(error.getField(), error.getDefaultMessage()));
             return ResponseEntity.badRequest().body(errors);
@@ -65,17 +64,17 @@ public class GlobalExceptionHandler {
         // Per tutti gli altri errori uso il formato standard
         Map<String, Object> response = createStandardErrorResponse();
 
-        // Controllo che tipo di errore è e metto il messaggio giusto
+        // Controllo che tipo di errore è e ci metto il messaggio giusto
         if (ex instanceof ConstraintViolationException) {
             response.put(MESSAGE, "Errore di validazione sui parametri");
 
         } else if (ex instanceof MissingServletRequestParameterException missingParamEx) {
-            // Parametro mancante: uso il messaggio specifico
+            // Parametro mancante: uso il messaggio specifico che ho creato nel metodo d'aiuto
             String message = getMissingParameterMessage(missingParamEx.getParameterName());
             response.put(MESSAGE, message);
 
         } else if (ex instanceof MethodArgumentTypeMismatchException typeMismatchEx) {
-            // Tipo sbagliato: uso il messaggio specifico
+            // Tipo sbagliato: uso il messaggio specifico che ho creato nel metodo d'aiuto
             String message = getTypeMismatchMessage(typeMismatchEx.getName());
             response.put(MESSAGE, message);
         }
@@ -84,7 +83,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Qui catturo tutti gli errori che non ho previsto.
+     * Questo metodo cattura tutti gli errori imprevisti che non ho gestito.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericErrors(Exception ex) {
@@ -97,7 +96,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Metodo di aiuto: crea la base della risposta di errore.
+     * Metodo di aiuto: crea la struttura base della risposta di errore.
      * Così non devo riscrivere sempre le stesse cose.
      */
     private Map<String, Object> createStandardErrorResponse() {
@@ -109,8 +108,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Quando manca un parametro, questo metodo decide che messaggio mostrare.
-     * Ho messo i messaggi specifici per i parametri che uso spesso.
+     * Metodo di aiuto: quando manca un parametro, questo metodo decide quale messaggio mostrare.
+     * Ho messo messaggi specifici per i parametri che uso più spesso.
      */
     private String getMissingParameterMessage(String parameterName) {
         return switch (parameterName) {
@@ -123,7 +122,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Quando il tipo del parametro è sbagliato, questo metodo decide che messaggio mostrare.
+     * Metodo di aiuto: quando il tipo del parametro è sbagliato, questo metodo decide quale messaggio mostrare.
      * Per esempio: se mando "abc" invece di un numero per idTavolo.
      */
     private String getTypeMismatchMessage(String parameterName) {

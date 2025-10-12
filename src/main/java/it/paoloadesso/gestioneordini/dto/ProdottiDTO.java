@@ -1,12 +1,14 @@
 package it.paoloadesso.gestioneordini.dto;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-public class CreaProdottiDto {
+public class ProdottiDTO {
+
+    @NotNull
+    private Long idProdotto;
 
     @NotBlank
     private String nome;
@@ -15,16 +17,24 @@ public class CreaProdottiDto {
     private String categoria;
 
     @NotNull
-    @DecimalMin(value = "0.01")
     private BigDecimal prezzo;
 
-    public CreaProdottiDto(String nome, String categoria, BigDecimal prezzo) {
+    public ProdottiDTO(Long idProdotto, String nome, String categoria, BigDecimal prezzo) {
+        this.idProdotto = idProdotto;
         this.nome = nome;
         this.categoria = categoria;
         this.prezzo = prezzo;
     }
 
-    public CreaProdottiDto() {
+    public ProdottiDTO() {
+    }
+
+    public Long getIdProdotto() {
+        return idProdotto;
+    }
+
+    public void setIdProdotto(Long idProdotto) {
+        this.idProdotto = idProdotto;
     }
 
     public String getNome() {

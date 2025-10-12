@@ -3,7 +3,7 @@ package it.paoloadesso.gestioneordini.dto;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-public class ProdottiOrdinatiRequestDto {
+public class ProdottiOrdinatiRequestDTO {
 
     @NotNull
     private Long idProdotto;
@@ -28,10 +28,10 @@ public class ProdottiOrdinatiRequestDto {
         this.quantitaProdotto = quantitaProdotto;
     }
 
-    public ProdottiOrdinatiRequestDto() {
+    public ProdottiOrdinatiRequestDTO() {
     }
 
-    public ProdottiOrdinatiRequestDto(Long idProdotto, Integer quantitaProdotto) {
+    public ProdottiOrdinatiRequestDTO(Long idProdotto, Integer quantitaProdotto) {
         this.idProdotto = idProdotto;
         this.quantitaProdotto = quantitaProdotto;
     }

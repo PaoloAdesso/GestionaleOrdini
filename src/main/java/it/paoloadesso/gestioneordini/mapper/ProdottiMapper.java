@@ -1,7 +1,7 @@
 package it.paoloadesso.gestioneordini.mapper;
 
-import it.paoloadesso.gestioneordini.dto.CreaProdottiDto;
-import it.paoloadesso.gestioneordini.dto.ProdottiDto;
+import it.paoloadesso.gestioneordini.dto.CreaProdottiDTO;
+import it.paoloadesso.gestioneordini.dto.ProdottiDTO;
 import it.paoloadesso.gestioneordini.entities.ProdottiEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,13 +11,13 @@ import org.mapstruct.ReportingPolicy;
 public interface ProdottiMapper {
 
     @Mapping(target = "id", ignore = true)
-    ProdottiEntity prodottiDtoToEntity (ProdottiDto prodottiDto);
+    ProdottiEntity prodottiDtoToEntity (ProdottiDTO prodottiDto);
 
     @Mapping(source = "id", target = "idProdotto")
-    ProdottiDto prodottiEntityToDto (ProdottiEntity prodottiEntity);
+    ProdottiDTO prodottiEntityToDto (ProdottiEntity prodottiEntity);
 
     @Mapping(target = "id", ignore = true)
-    ProdottiEntity createProdottiDtoToEntity (CreaProdottiDto creaProdottiDto);
+    ProdottiEntity createProdottiDtoToEntity (CreaProdottiDTO creaProdottiDto);
 
-    CreaProdottiDto createProdottiEntityToDto (ProdottiEntity prodottiEntity);
+    CreaProdottiDTO createProdottiEntityToDto (ProdottiEntity prodottiEntity);
 }

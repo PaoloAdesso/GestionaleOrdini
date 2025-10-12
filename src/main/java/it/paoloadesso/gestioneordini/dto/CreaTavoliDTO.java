@@ -2,16 +2,16 @@ package it.paoloadesso.gestioneordini.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class CreaTavoliDto {
+public class CreaTavoliDTO {
 
     @NotBlank
     private String numeroNomeTavolo;
 
-    public CreaTavoliDto(String numeroNomeTavolo) {
+    public CreaTavoliDTO(String numeroNomeTavolo) {
         this.numeroNomeTavolo = numeroNomeTavolo;
     }
 
-    public CreaTavoliDto() {
+    public CreaTavoliDTO() {
 
     }
 

@@ -5,24 +5,24 @@ import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
-public class ModificaOrdineRequestDto {
+public class ModificaOrdineRequestDTO {
 
     @Positive
     private Long nuovoIdTavolo;
 
     @Valid
-    private List<ProdottiOrdinatiRequestDto> prodottiDaAggiungere;
+    private List<ProdottiOrdinatiRequestDTO> prodottiDaAggiungere;
 
     @Valid
-    private List<ProdottiDaRimuovereDto> prodottiDaRimuovere;
+    private List<ProdottiDaRimuovereDTO> prodottiDaRimuovere;
 
-    public ModificaOrdineRequestDto(Long nuovoIdTavolo, List<ProdottiOrdinatiRequestDto> prodottiDaAggiungere, List<ProdottiDaRimuovereDto> prodottiDaRimuovere) {
+    public ModificaOrdineRequestDTO(Long nuovoIdTavolo, List<ProdottiOrdinatiRequestDTO> prodottiDaAggiungere, List<ProdottiDaRimuovereDTO> prodottiDaRimuovere) {
         this.nuovoIdTavolo = nuovoIdTavolo;
         this.prodottiDaAggiungere = prodottiDaAggiungere;
         this.prodottiDaRimuovere = prodottiDaRimuovere;
     }
 
-    public ModificaOrdineRequestDto() {
+    public ModificaOrdineRequestDTO() {
     }
 
     public Long getNuovoIdTavolo() {
@@ -33,20 +33,20 @@ public class ModificaOrdineRequestDto {
         this.nuovoIdTavolo = nuovoIdTavolo;
     }
 
-    public List<ProdottiOrdinatiRequestDto> getProdottiDaAggiungere() {
+    public List<ProdottiOrdinatiRequestDTO> getProdottiDaAggiungere() {
         return prodottiDaAggiungere;
     }
 
-    public void setProdottiDaAggiungere(List<ProdottiOrdinatiRequestDto> prodottiDaAggiungere) {
+    public void setProdottiDaAggiungere(List<ProdottiOrdinatiRequestDTO> prodottiDaAggiungere) {
         this.prodottiDaAggiungere = prodottiDaAggiungere;
     }
 
 
-    public List<ProdottiDaRimuovereDto> getProdottiDaRimuovere() {
+    public List<ProdottiDaRimuovereDTO> getProdottiDaRimuovere() {
         return prodottiDaRimuovere;
     }
 
-    public void setProdottiDaRimuovere(List<ProdottiDaRimuovereDto> prodottiDaRimuovere) {
+    public void setProdottiDaRimuovere(List<ProdottiDaRimuovereDTO> prodottiDaRimuovere) {
         this.prodottiDaRimuovere = prodottiDaRimuovere;
     }
 

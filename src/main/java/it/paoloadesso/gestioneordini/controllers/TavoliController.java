@@ -1,7 +1,7 @@
 package it.paoloadesso.gestioneordini.controllers;
 
-import it.paoloadesso.gestioneordini.dto.CreaTavoliDto;
-import it.paoloadesso.gestioneordini.dto.TavoliDto;
+import it.paoloadesso.gestioneordini.dto.CreaTavoliDTO;
+import it.paoloadesso.gestioneordini.dto.TavoliDTO;
 import it.paoloadesso.gestioneordini.services.TavoliService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -21,27 +21,26 @@ public class TavoliController {
     }
 
     @PostMapping
-    public ResponseEntity<TavoliDto> creaTavolo(@RequestBody @Valid CreaTavoliDto tavolo) {
+    public ResponseEntity<TavoliDTO> creaTavolo(@RequestBody @Valid CreaTavoliDTO tavolo) {
         return ResponseEntity.ok(tavoliService.creaTavolo(tavolo));
     }
 
     @GetMapping
-    public ResponseEntity<List<TavoliDto>> getListaTavoli() {
+    public ResponseEntity<List<TavoliDTO>> getListaTavoli() {
         return ResponseEntity.ok(tavoliService.getTavoli());
     }
 
     @GetMapping("/liberi")
-    public ResponseEntity<List<TavoliDto>> getListaTavoliLiberi() {
+    public ResponseEntity<List<TavoliDTO>> getListaTavoliLiberi() {
         return ResponseEntity.ok(tavoliService.getTavoliLiberi());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<TavoliDto> aggiornaTavolo(
+    public ResponseEntity<TavoliDTO> aggiornaTavolo(
             @PathVariable Long id,
-            @RequestBody @Valid TavoliDto tavolo
+            @RequestBody @Valid TavoliDTO tavolo
     ) {
-        tavolo.setId(id);
-        return ResponseEntity.ok(tavoliService.aggiornaTavolo(tavolo));
+        return ResponseEntity.ok(tavoliService.aggiornaTavolo(id, tavolo));
     }
 
     @DeleteMapping("/{idTavolo}")
