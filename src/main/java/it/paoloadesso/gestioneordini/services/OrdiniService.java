@@ -44,6 +44,12 @@ public class OrdiniService {
         this.ordiniMapper = ordiniMapper;
     }
 
+    /**
+     * Questo metodo crea un nuovo ordine per un tavolo.
+     * Prima controllo che il tavolo esista, poi creo l'ordine base e salvo subito per avere l'ID.
+     * Dopo aggiungo tutti i prodotti richiesti creando le relazioni nella tabella ponte ordini_prodotti.
+     * Uso @Transactional perché se qualcosa va storto devo annullare tutto (ordine + prodotti).
+     */
     @Transactional
     public OrdiniDTO creaOrdine(CreaOrdiniDTO dto) {
         // Prima cosa: controllo che il tavolo esista davvero nel database
@@ -138,8 +144,7 @@ public class OrdiniService {
 
     /**
      * Trova gli ordini con TUTTI i loro prodotti per un tavolo specifico.
-     * Differisce dal precedente perché oltre ai dati dell'ordine
-     * voglio anche sapere QUALI prodotti ci sono in ogni ordine.
+     * Oltre ai dati dell'ordine restituisce anche QUALI prodotti ci sono in ogni ordine.
      */
     public List<ListaOrdiniEProdottiByTavoloResponseDTO> getDettaglioOrdineByIdTavolo(
             @NotNull @Positive Long idTavolo) {
@@ -164,6 +169,14 @@ public class OrdiniService {
         return costruzioneDettagliOrdine(righe);
     }
 
+    /**
+     * Questo metodo modifica un ordine esistente aggiungendo nuovi prodotti o cambiando tavolo.
+     * Uso @Transactional perché faccio operazioni multiple che devono avere successo tutte insieme.
+     * Se qualcosa va storto, il database torna allo stato precedente automaticamente.
+     *
+     * Gestisco anche i "successi parziali": se alcuni prodotti vengono aggiunti ma altri danno errore,
+     * salvo quelli buoni e notifico gli errori nel DTO di risposta.
+     */
     @Transactional
     public RisultatoModificaOrdineDTO modificaOrdine(
             Long idOrdine, @Valid ModificaOrdineRequestDTO requestDto) {

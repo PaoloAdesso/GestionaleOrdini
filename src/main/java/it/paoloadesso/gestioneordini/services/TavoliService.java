@@ -28,7 +28,10 @@ public class TavoliService {
     @Transactional
     public TavoliDTO creaTavolo(CreaTavoliDTO dto) {
         if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tavolo non creato poiché il nome del tavolo esiste già.");
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Esiste già un tavolo con numero/nome: " + dto.getNumeroNomeTavolo()
+            );
         }
 
         TavoliEntity tavolo = tavoliRepository.save(tavoliMapper.createTavoliDtoToEntity(dto));
@@ -39,7 +42,7 @@ public class TavoliService {
         List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
         List<TavoliDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
-                .map(el->tavoliMapper.entityToDto(el))
+                .map(el -> tavoliMapper.entityToDto(el))
                 .toList();
         return tavoliResponseDto;
     }
@@ -48,7 +51,7 @@ public class TavoliService {
         List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
         List<TavoliDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
-                .map(el->tavoliMapper.entityToDto(el))
+                .map(el -> tavoliMapper.entityToDto(el))
                 .toList();
         return tavoliResponseDto;
     }
@@ -69,7 +72,7 @@ public class TavoliService {
     }
 
     @Transactional
-    public void deleteTavoloById(Long idTavolo) {
+    public void eliminaTavoloByIdERelativiOrdiniCollegati(Long idTavolo) {
         // Cerco il tavolo e se non c'è restituisco relativo messaggio
         TavoliEntity tavolo = tavoliRepository.findById(idTavolo)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,

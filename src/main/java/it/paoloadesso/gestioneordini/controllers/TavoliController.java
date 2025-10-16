@@ -45,7 +45,7 @@ public class TavoliController {
 
     @DeleteMapping("/{idTavolo}")
     public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
-        tavoliService.deleteTavoloById(idTavolo);
+        tavoliService.eliminaTavoloByIdERelativiOrdiniCollegati(idTavolo);
         return ResponseEntity.noContent().build();
     }
 }

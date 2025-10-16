@@ -46,7 +46,15 @@ public class ProdottiService {
         return prodottiRepository.findAllCategorieDistinct();
     }
 
+    /**
+     * Questo metodo cerca prodotti il cui nome contiene la stringa passata.
+     * Ad esempio: se cerco "pizza" trovo "Pizza Margherita", "Pizza 4 Formaggi", ecc.
+     * La ricerca è case-insensitive (non fa differenza tra maiuscole e minuscole).
+     */
     public List<ProdottiDTO> getProdottiByContainingNome(@NotBlank String nomeProdotto) {
+        if (nomeProdotto == null || nomeProdotto.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il nome del prodotto non può essere vuoto.");
+        }
         List<ProdottiEntity> entities = prodottiRepository.findByNomeContainingIgnoreCase(nomeProdotto.trim());
         return entities.stream()
                 .map(prodottiMapper::prodottiEntityToDto)
