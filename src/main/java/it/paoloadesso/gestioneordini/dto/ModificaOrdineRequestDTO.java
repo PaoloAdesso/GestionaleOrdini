@@ -1,5 +1,7 @@
 package it.paoloadesso.gestioneordini.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 
@@ -7,13 +9,20 @@ import java.util.List;
 
 public class ModificaOrdineRequestDTO {
 
+    @Schema(description = "Nuovo ID del tavolo (opzionale, invia solo se vuoi cambiare tavolo)",
+            example = "5",
+            nullable = true)
     @Positive
     private Long nuovoIdTavolo;
 
     @Valid
+    @Schema(description = "Lista prodotti da aggiungere all'ordine (opzionale)",
+            nullable = true)
     private List<ProdottiOrdinatiRequestDTO> prodottiDaAggiungere;
 
     @Valid
+    @Schema(description = "Lista prodotti da rimuovere dall'ordine (opzionale)",
+            nullable = true)
     private List<ProdottiDaRimuovereDTO> prodottiDaRimuovere;
 
     public ModificaOrdineRequestDTO(Long nuovoIdTavolo, List<ProdottiOrdinatiRequestDTO> prodottiDaAggiungere, List<ProdottiDaRimuovereDTO> prodottiDaRimuovere) {
@@ -59,6 +68,7 @@ public class ModificaOrdineRequestDTO {
                 '}';
     }
 
+    @JsonIgnore
     public boolean isEmpty() {
         return nuovoIdTavolo == null &&
                 (prodottiDaAggiungere == null || prodottiDaAggiungere.isEmpty()) &&

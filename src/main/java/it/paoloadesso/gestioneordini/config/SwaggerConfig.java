@@ -16,7 +16,7 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Gestione Ordini API")
                         .version("1.0")
-                        .description("API per la gestione degli ordini del bar/ristorante - Camerieri")
+                        .description("API per la gestione degli ordini del bar/ristorante - Personale di Sala")
                         .contact(new Contact()
                                 .name("Paolo Adesso")
                                 .email("paolo@ristorante.it")

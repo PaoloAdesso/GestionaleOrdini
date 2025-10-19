@@ -1,6 +1,5 @@
 package it.paoloadesso.gestioneordini.mapper;
 
-import it.paoloadesso.gestioneordini.dto.CreaOrdiniDTO;
 import it.paoloadesso.gestioneordini.dto.ListaOrdiniEProdottiByTavoloResponseDTO;
 import it.paoloadesso.gestioneordini.dto.OrdiniDTO;
 import it.paoloadesso.gestioneordini.entities.OrdiniEntity;

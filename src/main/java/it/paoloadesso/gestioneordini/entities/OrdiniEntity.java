@@ -72,6 +72,5 @@ public class OrdiniEntity {
     @PrePersist
     public void prePersist(){
         this.statoOrdine = StatoOrdine.IN_ATTESA;
-        this.dataOrdine = LocalDate.now();
     }
 }

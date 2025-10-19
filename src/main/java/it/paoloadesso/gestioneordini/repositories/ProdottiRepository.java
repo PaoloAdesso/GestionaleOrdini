@@ -3,11 +3,9 @@ package it.paoloadesso.gestioneordini.repositories;
 import it.paoloadesso.gestioneordini.entities.ProdottiEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface ProdottiRepository extends JpaRepository<ProdottiEntity, Long> {

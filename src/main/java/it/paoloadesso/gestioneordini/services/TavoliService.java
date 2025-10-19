@@ -1,7 +1,8 @@
 package it.paoloadesso.gestioneordini.services;
 
-import it.paoloadesso.gestioneordini.dto.CreaTavoliDTO;
-import it.paoloadesso.gestioneordini.dto.TavoliDTO;
+import it.paoloadesso.gestioneordini.dto.AggiornaTavoloDTO;
+import it.paoloadesso.gestioneordini.dto.CreaTavoliRequestDTO;
+import it.paoloadesso.gestioneordini.dto.TavoliResponseDTO;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
 import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import it.paoloadesso.gestioneordini.mapper.TavoliMapper;
@@ -26,7 +27,7 @@ public class TavoliService {
     }
 
     @Transactional
-    public TavoliDTO creaTavolo(CreaTavoliDTO dto) {
+    public TavoliResponseDTO creaTavolo(CreaTavoliRequestDTO dto) {
         if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
@@ -38,18 +39,18 @@ public class TavoliService {
         return tavoliMapper.entityToDto(tavolo);
     }
 
-    public List<TavoliDTO> getTavoli() {
+    public List<TavoliResponseDTO> getTavoli() {
         List<TavoliEntity> listaTavoli = tavoliRepository.findAll();
-        List<TavoliDTO> tavoliResponseDto;
+        List<TavoliResponseDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
                 .map(el -> tavoliMapper.entityToDto(el))
                 .toList();
         return tavoliResponseDto;
     }
 
-    public List<TavoliDTO> getTavoliLiberi() {
+    public List<TavoliResponseDTO> getTavoliLiberi() {
         List<TavoliEntity> listaTavoli = tavoliRepository.findByStatoTavolo(StatoTavolo.LIBERO);
-        List<TavoliDTO> tavoliResponseDto;
+        List<TavoliResponseDTO> tavoliResponseDto;
         tavoliResponseDto = listaTavoli.stream()
                 .map(el -> tavoliMapper.entityToDto(el))
                 .toList();
@@ -57,19 +58,31 @@ public class TavoliService {
     }
 
     @Transactional
-    public TavoliDTO aggiornaTavolo(Long id, TavoliDTO dtoTavolo) {
-        if (!tavoliRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tavolo con ID " + id + " non trovato.");
+    public TavoliResponseDTO aggiornaTavolo(Long id, AggiornaTavoloDTO dto) {
+        // Verifico che il tavolo esista
+        TavoliEntity tavoloEsistente = tavoliRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Tavolo con ID " + id + " non trovato."));
+
+        // Aggiorno solo i campi forniti (non-null)
+        if (dto.getNumeroNomeTavolo() != null) {
+            // Verifico che il nome non sia già usato da un altro tavolo
+            if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCaseAndIdNot(
+                    dto.getNumeroNomeTavolo(), id)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "Esiste già un altro tavolo con nome: " + dto.getNumeroNomeTavolo());
+            }
+            tavoloEsistente.setNumeroNomeTavolo(dto.getNumeroNomeTavolo());
         }
 
-        // Uso il mapper per convertire DTO → Entity
-        TavoliEntity tavolo = tavoliMapper.dtoToEntity(dtoTavolo);
-        tavolo.setId(id);  // Setto l'ID manualmente
+        if (dto.getStatoTavolo() != null) {
+            tavoloEsistente.setStatoTavolo(dto.getStatoTavolo());
+        }
 
-        TavoliEntity tavoloAggiornato = tavoliRepository.save(tavolo);
+        TavoliEntity tavoloAggiornato = tavoliRepository.save(tavoloEsistente);
         return tavoliMapper.entityToDto(tavoloAggiornato);
     }
+
 
     @Transactional
     public void eliminaTavoloByIdERelativiOrdiniCollegati(Long idTavolo) {

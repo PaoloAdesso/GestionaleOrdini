@@ -71,6 +71,4 @@ public class ProdottiService {
                 .map(prodottiMapper::prodottiEntityToDto)
                 .toList();
     }
-
-
 }

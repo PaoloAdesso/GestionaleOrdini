@@ -11,6 +11,7 @@ public class RisultatoModificaOrdineDTO {
 
     private ListaOrdiniEProdottiByTavoloResponseDTO ordine;
     private int prodottiAggiunti;
+    private int prodottiRimossi;
     private List<String> errori;
     private boolean operazioneCompleta;
     private String messaggio;
@@ -19,11 +20,13 @@ public class RisultatoModificaOrdineDTO {
 
     public RisultatoModificaOrdineDTO(ListaOrdiniEProdottiByTavoloResponseDTO ordine,
                                       int prodottiAggiunti,
+                                      int prodottiRimossi,
                                       List<String> errori,
                                       boolean operazioneCompleta,
                                       String messaggio) {
         this.ordine = ordine;
         this.prodottiAggiunti = prodottiAggiunti;
+        this.prodottiRimossi = prodottiRimossi;
         this.errori = errori;
         this.operazioneCompleta = operazioneCompleta;
         this.messaggio = messaggio;
@@ -34,6 +37,9 @@ public class RisultatoModificaOrdineDTO {
 
     public int getProdottiAggiunti() { return prodottiAggiunti; }
     public void setProdottiAggiunti(int prodottiAggiunti) { this.prodottiAggiunti = prodottiAggiunti; }
+
+    public int getProdottiRimossi() { return prodottiRimossi; }
+    public void setProdottiRimossi(int prodottiRimossi) { this.prodottiRimossi = prodottiRimossi; }
 
     public List<String> getErrori() { return errori; }
     public void setErrori(List<String> errori) { this.errori = errori; }
@@ -48,6 +54,7 @@ public class RisultatoModificaOrdineDTO {
     public String toString() {
         return "RisultatoModificaOrdineDto{" +
                 "prodottiAggiunti=" + prodottiAggiunti +
+                ", prodottiRimossi=" + prodottiRimossi +
                 ", errori=" + errori +
                 ", operazioneCompleta=" + operazioneCompleta +
                 ", messaggio='" + messaggio + '\'' +

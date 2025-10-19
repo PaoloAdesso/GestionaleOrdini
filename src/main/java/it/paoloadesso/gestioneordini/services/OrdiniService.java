@@ -7,11 +7,13 @@ import it.paoloadesso.gestioneordini.entities.ProdottiEntity;
 import it.paoloadesso.gestioneordini.entities.TavoliEntity;
 import it.paoloadesso.gestioneordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestioneordini.enums.StatoOrdine;
+import it.paoloadesso.gestioneordini.enums.StatoTavolo;
 import it.paoloadesso.gestioneordini.mapper.OrdiniMapper;
 import it.paoloadesso.gestioneordini.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestioneordini.repositories.OrdiniRepository;
 import it.paoloadesso.gestioneordini.repositories.ProdottiRepository;
 import it.paoloadesso.gestioneordini.repositories.TavoliRepository;
+import it.paoloadesso.gestioneordini.utils.DataLavorativaUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -36,11 +38,14 @@ public class OrdiniService {
 
     private final OrdiniMapper ordiniMapper;
 
-    public OrdiniService(OrdiniRepository ordiniRepository, TavoliRepository tavoliRepository, ProdottiRepository prodottiRepository, OrdiniProdottiRepository ordiniProdottiRepository, OrdiniMapper ordiniMapper) {
+    private final DataLavorativaUtil dataLavorativaUtil;
+
+    public OrdiniService(OrdiniRepository ordiniRepository, TavoliRepository tavoliRepository, ProdottiRepository prodottiRepository, OrdiniProdottiRepository ordiniProdottiRepository, DataLavorativaUtil dataLavorativaUtil, OrdiniMapper ordiniMapper) {
         this.ordiniRepository = ordiniRepository;
         this.tavoliRepository = tavoliRepository;
         this.prodottiRepository = prodottiRepository;
         this.ordiniProdottiRepository = ordiniProdottiRepository;
+        this.dataLavorativaUtil = dataLavorativaUtil;
         this.ordiniMapper = ordiniMapper;
     }
 
@@ -62,6 +67,7 @@ public class OrdiniService {
         // Creo l'ordine base (senza prodotti ancora) e lo salvo subito per avere l'ID generato
         OrdiniEntity ordine = new OrdiniEntity();
         ordine.setTavolo(tavolo);
+        ordine.setDataOrdine(oggiLavorativo());
         ordine = ordiniRepository.save(ordine);// Ora ho l'ID generato automaticamente dal database
 
         // Creo una lista per contenere tutte le relazioni ordine-prodotto
@@ -90,7 +96,10 @@ public class OrdiniService {
 
         // Salvo tutte le relazioni ordine-prodotto in una volta sola per essere più efficiente
         ordiniProdottiRepository.saveAll(ordiniProdottiEntities);
-
+        // Cambio lo stato del tavolo in OCCUPATO
+        if (tavolo.getStatoTavolo() != StatoTavolo.OCCUPATO) {
+            tavolo.setStatoTavolo(StatoTavolo.OCCUPATO);
+        }
         // Alternativa commentata: potrei usare MapStruct invece di fare la conversione manualmente
         // return ordiniMapper.ordiniEntityToDto(ordine)
 
@@ -128,7 +137,7 @@ public class OrdiniService {
 
     public List<OrdiniDTO> getOrdiniDiOggi() {
         // Cerco ordini con data di oggi che NON sono chiusi
-        List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(LocalDate.now(), StatoOrdine.CHIUSO);
+        List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(oggiLavorativo(), StatoOrdine.CHIUSO);
         // Uso method reference per convertire Entity in DTO
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
@@ -138,7 +147,7 @@ public class OrdiniService {
         controlloSeIlTavoloEsiste(idTavolo);
         // Cerco ordini di questo tavolo, di oggi, che NON sono chiusi
         List<OrdiniEntity> ordini = ordiniRepository
-                .findByTavoloIdAndDataOrdineAndStatoOrdineNot(idTavolo, LocalDate.now(), StatoOrdine.CHIUSO);
+                .findByTavoloIdAndDataOrdineAndStatoOrdineNot(idTavolo, oggiLavorativo(), StatoOrdine.CHIUSO);
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
 
@@ -164,7 +173,7 @@ public class OrdiniService {
         controlloSeIlTavoloEsiste(idTavolo);
 
         List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
-                .findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(idTavolo, LocalDate.now() , StatoOrdine.CHIUSO);
+                .findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(idTavolo, oggiLavorativo(), StatoOrdine.CHIUSO);
 
         return costruzioneDettagliOrdine(righe);
     }
@@ -173,7 +182,7 @@ public class OrdiniService {
      * Questo metodo modifica un ordine esistente aggiungendo nuovi prodotti o cambiando tavolo.
      * Uso @Transactional perché faccio operazioni multiple che devono avere successo tutte insieme.
      * Se qualcosa va storto, il database torna allo stato precedente automaticamente.
-     *
+     * <p>
      * Gestisco anche i "successi parziali": se alcuni prodotti vengono aggiunti ma altri danno errore,
      * salvo quelli buoni e notifico gli errori nel DTO di risposta.
      */
@@ -228,9 +237,16 @@ public class OrdiniService {
                         prodottiRimossi++;
                     }
 
+                } catch (ResponseStatusException e) {
+                    // Se questo prodotto da errore, lo segno ma continuo con gli altri
+                    String messaggioErrore = "Rimozione Prodotto ID " + prodotto.getIdProdotto() +
+                            ": " + e.getReason();
+                    errori.add(messaggioErrore);
+
                 } catch (Exception e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
-                    String messaggioErrore = "Rimozione Prodotto ID " + prodotto.getIdProdotto() + ": " + e.getMessage();
+                    String messaggioErrore = "Rimozione Prodotto ID " + prodotto.getIdProdotto() +
+                            ": " + e.getMessage();
                     errori.add(messaggioErrore);
                 }
             }
@@ -247,9 +263,16 @@ public class OrdiniService {
                     if (aggiunto) {
                         prodottiAggiunti++;
                     }
+                } catch (ResponseStatusException e) {
+                    // Se questo prodotto da errore, lo segno ma continuo con gli altri
+                    String messaggioErrore = "Aggiunta Prodotto ID " + prodotto.getIdProdotto() +
+                            ": " + e.getReason();
+                    errori.add(messaggioErrore);
+
                 } catch (Exception e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
-                    String messaggioErrore = "Prodotto ID " + prodotto.getIdProdotto() + ": " + e.getMessage();
+                    String messaggioErrore = "Aggiunta Prodotto ID " + prodotto.getIdProdotto() +
+                            ": " + e.getMessage();
                     errori.add(messaggioErrore);
                 }
             }
@@ -407,7 +430,7 @@ public class OrdiniService {
         boolean operazioneCompleta = errori.isEmpty();
         String messaggio = costruisciMessaggio(requestDto, prodottiAggiunti, prodottiRimossi, errori, operazioneCompleta);
 
-        return new RisultatoModificaOrdineDTO(ordine, prodottiAggiunti, errori, operazioneCompleta, messaggio);
+        return new RisultatoModificaOrdineDTO(ordine, prodottiAggiunti, prodottiRimossi, errori, operazioneCompleta, messaggio);
     }
 
     /**
@@ -460,6 +483,10 @@ public class OrdiniService {
                 return String.join(" e ", successi) + ", " + erroriMsg;
             }
         }
+    }
+
+    private LocalDate oggiLavorativo() {
+        return dataLavorativaUtil.getDataLavorativa();
     }
 
 }
