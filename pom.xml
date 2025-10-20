@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
     <groupId>it.paoloadesso</groupId>
-    <artifactId>GestioneOrdini</artifactId>
+    <artifactId>GestionaleOrdini</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>GestioneOrdini</name>
-    <description>Sistema gestione ordini per ristorante</description>
+    <name>GestionaleOrdini</name>
+    <description>Gestionale ordini per bar/ristorante</description>
 
     <properties>
         <java.version>21</java.version>
