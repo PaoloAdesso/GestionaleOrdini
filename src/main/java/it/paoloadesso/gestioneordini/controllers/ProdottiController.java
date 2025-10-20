@@ -3,7 +3,6 @@ package it.paoloadesso.gestioneordini.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.paoloadesso.gestioneordini.dto.CreaProdottiDTO;
-import it.paoloadesso.gestioneordini.dto.OrdiniDTO;
 import it.paoloadesso.gestioneordini.dto.ProdottiDTO;
 import it.paoloadesso.gestioneordini.services.ProdottiService;
 import jakarta.validation.Valid;

@@ -122,6 +122,7 @@ public class OrdiniService {
                 .collect(Collectors.toList());
     }
 
+
     public List<OrdiniDTO> getListaOrdiniApertiByTavolo(Long idTavolo) {
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);

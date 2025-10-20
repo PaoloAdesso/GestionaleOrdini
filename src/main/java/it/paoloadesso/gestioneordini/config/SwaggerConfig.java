@@ -19,8 +19,7 @@ public class SwaggerConfig {
                         .description("API per la gestione degli ordini del bar/ristorante - Personale di Sala")
                         .contact(new Contact()
                                 .name("Paolo Adesso")
-                                .email("paolo@ristorante.it")
-                                .url("https://www.ristorante.now"))
+                                .email("paoloadesso@outlook.it"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0")));
