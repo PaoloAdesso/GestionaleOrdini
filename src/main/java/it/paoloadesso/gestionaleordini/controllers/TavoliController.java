@@ -80,16 +80,4 @@ public class TavoliController {
     ) {
         return ResponseEntity.ok(tavoliService.aggiornaTavolo(id, tavolo));
     }
-
-    @Operation(
-            summary = "Elimina un tavolo",
-            description = "Elimina definitivamente un tavolo e tutti gli ordini ad esso collegati. " +
-                    "ATTENZIONE: questa operazione è irreversibile e rimuove anche lo storico degli ordini del tavolo. " +
-                    "Usare solo per tavoli che non esistono più fisicamente nel ristorante."
-    )
-    @DeleteMapping("/{idTavolo}")
-    public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
-        tavoliService.eliminaTavoloByIdERelativiOrdiniCollegati(idTavolo);
-        return ResponseEntity.noContent().build();
-    }
 }

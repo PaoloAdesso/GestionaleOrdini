@@ -84,13 +84,4 @@ public class TavoliService {
     }
 
 
-    @Transactional
-    public void eliminaTavoloByIdERelativiOrdiniCollegati(Long idTavolo) {
-        // Cerco il tavolo e se non c'è restituisco relativo messaggio
-        TavoliEntity tavolo = tavoliRepository.findById(idTavolo)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Tavolo con ID " + idTavolo + " non trovato."));
-        // Elimino il tavolo trovato
-        tavoliRepository.delete(tavolo);
-    }
 }

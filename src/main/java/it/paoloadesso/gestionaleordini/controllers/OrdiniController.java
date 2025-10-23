@@ -17,7 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("ordini")
 @Validated
-@Tag(name = "Gestione Ordini", description = "API per la gestione degli ordini dei clienti")
+@Tag(name = "Gestione Ordini", description = "API per la gestione degli ordini dei clienti da parte del personale di sala")
 public class OrdiniController {
 
     private final OrdiniService ordiniService;

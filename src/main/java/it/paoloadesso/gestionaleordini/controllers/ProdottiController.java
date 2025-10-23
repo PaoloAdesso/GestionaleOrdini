@@ -2,18 +2,16 @@ package it.paoloadesso.gestionaleordini.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.paoloadesso.gestionaleordini.dto.CreaProdottiDTO;
 import it.paoloadesso.gestionaleordini.dto.ProdottiDTO;
 import it.paoloadesso.gestionaleordini.services.ProdottiService;
-import jakarta.validation.Valid;
-
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -29,25 +27,7 @@ public class ProdottiController {
     }
 
     @Operation(
-            summary = "Crea un nuovo prodotto",
-            description = "Permette di aggiungere un nuovo prodotto al menu del ristorante specificando nome, categoria e prezzo. " +
-                    "Il prodotto diventa immediatamente disponibile per essere ordinato."
-    )
-    @PostMapping
-    public ResponseEntity<ProdottiDTO> creaProdotto(@RequestBody @Valid CreaProdottiDTO prodotto) {
-        ProdottiDTO nuovoProdotto = prodottiService.creaProdotto(prodotto);
-
-        URI location = ServletUriComponentsBuilder
-                .fromCurrentRequest()
-                .path("/{id}")
-                .buildAndExpand(nuovoProdotto.getIdProdotto())
-                .toUri();
-
-        return ResponseEntity.created(location).body(nuovoProdotto);
-    }
-
-    @Operation(
-            summary = "Recupera tutti i prodotti",
+            summary = "Elenco prodotti",
             description = "Restituisce la lista completa di tutti i prodotti disponibili nel menu del ristorante " +
                     "con informazioni su nome, categoria e prezzo. Utile per visualizzare l'intero catalogo."
     )
@@ -57,7 +37,7 @@ public class ProdottiController {
     }
 
     @Operation(
-            summary = "Recupera tutte le categorie",
+            summary = "Categorie menu disponibili",
             description = "Restituisce la lista di tutte le categorie di prodotti presenti nel menu. " +
                     "Utile per creare filtri o menu categorizzati nell'interfaccia utente."
     )
@@ -67,7 +47,7 @@ public class ProdottiController {
     }
 
     @Operation(
-            summary = "Cerca prodotti per nome",
+            summary = "Ricerca rapida prodotti per nome",
             description = "Cerca prodotti il cui nome contiene la stringa specificata (ricerca case-insensitive). " +
                     "Utile per il personale di sala quando deve cercare rapidamente un prodotto " +
                     "senza conoscerne il nome esatto. Esempio: 'pizza' trova 'Pizza Margherita', 'Pizza Diavola', ecc."
@@ -79,7 +59,7 @@ public class ProdottiController {
     }
 
     @Operation(
-            summary = "Cerca prodotti per categoria",
+            summary = "Ricerca rapida prodotti per categoria",
             description = "Restituisce tutti i prodotti che appartengono alla categoria specificata (case-insensitive). " +
                     "Utile per filtrare il menu per tipo di prodotto. " +
                     "Esempi di categorie: Antipasti, Primi, Secondi, Dolci, Bevande."

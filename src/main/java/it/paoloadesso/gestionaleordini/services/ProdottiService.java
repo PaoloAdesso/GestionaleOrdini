@@ -1,13 +1,12 @@
 package it.paoloadesso.gestionaleordini.services;
 
-import it.paoloadesso.gestionaleordini.dto.*;
+import it.paoloadesso.gestionaleordini.dto.ProdottiDTO;
 import it.paoloadesso.gestionaleordini.entities.ProdottiEntity;
 import it.paoloadesso.gestionaleordini.mapper.ProdottiMapper;
 import it.paoloadesso.gestionaleordini.repositories.ProdottiRepository;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
@@ -21,17 +20,6 @@ public class ProdottiService {
     public ProdottiService(ProdottiRepository prodottiRepository, ProdottiMapper prodottiMapper) {
         this.prodottiRepository = prodottiRepository;
         this.prodottiMapper = prodottiMapper;
-    }
-
-    @Transactional
-    public ProdottiDTO creaProdotto(CreaProdottiDTO dto) {
-        //controllo se il prodotto esiste
-        if (prodottiRepository.existsByNomeIgnoreCase(dto.getNome())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il prodotto «" + dto.getNome() + "» è già presente");
-        }
-
-        ProdottiEntity prodotto = prodottiRepository.save(prodottiMapper.createProdottiDtoToEntity(dto));
-        return prodottiMapper.prodottiEntityToDto(prodotto);
     }
 
     public List<ProdottiDTO> getAllProdotti() {
