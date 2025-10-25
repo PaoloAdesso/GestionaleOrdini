@@ -8,6 +8,8 @@ import it.paoloadesso.gestionaleordini.entities.TavoliEntity;
 import it.paoloadesso.gestionaleordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestionaleordini.enums.StatoOrdine;
 import it.paoloadesso.gestionaleordini.enums.StatoTavolo;
+import it.paoloadesso.gestionaleordini.exceptionhandling.ModificaStatoNonPermessaException;
+import it.paoloadesso.gestionaleordini.exceptionhandling.OrdineNotFoundException;
 import it.paoloadesso.gestionaleordini.mapper.OrdiniMapper;
 import it.paoloadesso.gestionaleordini.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionaleordini.repositories.OrdiniRepository;
@@ -17,6 +19,8 @@ import it.paoloadesso.gestionaleordini.utils.DataLavorativaUtil;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +34,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OrdiniService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrdiniService.class);
 
     private final OrdiniRepository ordiniRepository;
     private final TavoliRepository tavoliRepository;
@@ -290,6 +296,52 @@ public class OrdiniService {
 
         // Creo il risultato con informazioni complete su successi e fallimenti
         return creaRisultatoModifica(ordineAggiornato, prodottiAggiunti, prodottiRimossi, errori, requestDto);
+    }
+
+    @Transactional
+    public RisultatoModificaStatoOrdineDTO modificaStatoOrdine(Long idOrdine, ModificaStatoOrdineRequestDTO request) {
+
+        // Trova l'ordine
+        OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
+                .orElseThrow(() -> new OrdineNotFoundException(idOrdine));
+
+        StatoOrdine vecchioStato = ordine.getStatoOrdine();
+        StatoOrdine nuovoStato = request.getNuovoStato();
+
+        // Validazione: non può modificare ordini chiusi
+        if (vecchioStato == StatoOrdine.CHIUSO) {
+            throw new ModificaStatoNonPermessaException(
+                    "L'ordine " + idOrdine + " è chiuso. Non è possibile modificarne lo stato."
+            );
+        }
+
+        // Validazione: non può impostare CHIUSO con questo endpoint
+        if (nuovoStato == StatoOrdine.CHIUSO) {
+            throw new ModificaStatoNonPermessaException(
+                    "Per chiudere l'ordine usa l'endpoint dedicato di chiusura"
+            );
+        }
+
+        // Se è già nello stato richiesto
+        if (vecchioStato == nuovoStato) {
+            return new RisultatoModificaStatoOrdineDTO(
+                    idOrdine, vecchioStato, nuovoStato, true,
+                    "Nessuna modifica: l'ordine è già nello stato " + nuovoStato
+            );
+        }
+
+        // Modifica semplice
+        ordine.setStatoOrdine(nuovoStato);
+        ordiniRepository.save(ordine);
+
+        String messaggio = String.format("Stato ordine modificato da %s a %s", vecchioStato, nuovoStato);
+
+        log.info("Ordine {}: {} → {} {}", idOrdine, vecchioStato, nuovoStato,
+                request.getNote() != null ? "(Note: " + request.getNote() + ")" : "");
+
+        return new RisultatoModificaStatoOrdineDTO(
+                idOrdine, vecchioStato, nuovoStato, true, messaggio
+        );
     }
 
     private void controlloSeIlTavoloEsiste(Long idTavolo) {

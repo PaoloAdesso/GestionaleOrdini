@@ -144,4 +144,19 @@ public class OrdiniController {
             return ResponseEntity.badRequest().body(risultato); // 400 - Tutti i prodotti falliti
         }
     }
+
+    @Operation(
+            summary = "Modifica stato operativo di un ordine",
+            description = "Permette di modificare lo stato di un ordine tra IN_ATTESA, IN_PREPARAZIONE e SERVITO. " +
+                    "Non gestisce la chiusura ordini (usa l'endpoint dedicato). " +
+                    "Utile per il workflow in cucina e sala."
+    )
+    @PatchMapping("/modifica-stato/{idOrdine}")
+    public ResponseEntity<RisultatoModificaStatoOrdineDTO> modificaStatoOrdine(
+            @PathVariable @Positive Long idOrdine,
+            @RequestBody @Valid ModificaStatoOrdineRequestDTO request) {
+
+        RisultatoModificaStatoOrdineDTO risultato = ordiniService.modificaStatoOrdine(idOrdine, request);
+        return ResponseEntity.ok(risultato);
+    }
 }

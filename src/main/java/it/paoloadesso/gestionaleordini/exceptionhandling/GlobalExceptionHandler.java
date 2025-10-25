@@ -1,5 +1,6 @@
 package it.paoloadesso.gestionaleordini.exceptionhandling;
 
+import it.paoloadesso.gestionaleordini.dto.ErrorResponseDTO;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -93,6 +94,30 @@ public class GlobalExceptionHandler {
         response.put(MESSAGE, "Si è verificato un errore interno del server");
 
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(OrdineNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrdineNotFound(OrdineNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponseDTO(ex.getMessage(), "ORDINE_NON_TROVATO"));
+    }
+
+    @ExceptionHandler(OrdineChiusoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrdineChiuso(OrdineChiusoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponseDTO(ex.getMessage(), "ORDINE_GIA_CHIUSO"));
+    }
+
+    @ExceptionHandler(ProdottiNonPagatiException.class)
+    public ResponseEntity<ErrorResponseDTO> handleProdottiNonPagati(ProdottiNonPagatiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(ex.getMessage(), "PRODOTTI_NON_PAGATI"));
+    }
+
+    @ExceptionHandler(ModificaStatoNonPermessaException.class)
+    public ResponseEntity<ErrorResponseDTO> handleModificaStatoNonPermessa(ModificaStatoNonPermessaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(ex.getMessage(), "MODIFICA_STATO_NON_PERMESSA"));
     }
 
     /**
