@@ -8,8 +8,9 @@ import it.paoloadesso.gestionaleordini.entities.TavoliEntity;
 import it.paoloadesso.gestionaleordini.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestionaleordini.enums.StatoOrdine;
 import it.paoloadesso.gestionaleordini.enums.StatoTavolo;
-import it.paoloadesso.gestionaleordini.exceptionhandling.ModificaStatoNonPermessaException;
-import it.paoloadesso.gestionaleordini.exceptionhandling.OrdineNotFoundException;
+import it.paoloadesso.gestionaleordini.exceptionhandling.EntitaNonTrovataException;
+import it.paoloadesso.gestionaleordini.exceptionhandling.ModificaVuotaException;
+import it.paoloadesso.gestionaleordini.exceptionhandling.StatoNonValidoException;
 import it.paoloadesso.gestionaleordini.mapper.OrdiniMapper;
 import it.paoloadesso.gestionaleordini.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionaleordini.repositories.OrdiniRepository;
@@ -21,10 +22,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -46,7 +45,9 @@ public class OrdiniService {
 
     private final DataLavorativaUtil dataLavorativaUtil;
 
-    public OrdiniService(OrdiniRepository ordiniRepository, TavoliRepository tavoliRepository, ProdottiRepository prodottiRepository, OrdiniProdottiRepository ordiniProdottiRepository, DataLavorativaUtil dataLavorativaUtil, OrdiniMapper ordiniMapper) {
+    public OrdiniService(OrdiniRepository ordiniRepository, TavoliRepository tavoliRepository,
+                         ProdottiRepository prodottiRepository, OrdiniProdottiRepository ordiniProdottiRepository,
+                         DataLavorativaUtil dataLavorativaUtil, OrdiniMapper ordiniMapper) {
         this.ordiniRepository = ordiniRepository;
         this.tavoliRepository = tavoliRepository;
         this.prodottiRepository = prodottiRepository;
@@ -63,27 +64,42 @@ public class OrdiniService {
      */
     @Transactional
     public OrdiniDTO creaOrdine(CreaOrdiniDTO dto) {
+        log.info("Tentativo di creazione ordine per tavolo ID: {}", dto.getIdTavolo());
+
         // Prima cosa: controllo che il tavolo esista davvero nel database
         controlloSeIlTavoloEsiste(dto.getIdTavolo());
 
         // Carico l'entity completa del tavolo dal database perché mi servirà dopo
         TavoliEntity tavolo = tavoliRepository.findById(dto.getIdTavolo())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato"));
+                .orElseThrow(() -> {
+                    log.error("Tavolo con ID {} non trovato per creazione ordine", dto.getIdTavolo());
+                    return new EntitaNonTrovataException("Tavolo", dto.getIdTavolo());
+                });
+
+        log.debug("Tavolo trovato: {} - Stato: {}", tavolo.getNumeroNomeTavolo(), tavolo.getStatoTavolo());
 
         // Creo l'ordine base (senza prodotti ancora) e lo salvo subito per avere l'ID generato
         OrdiniEntity ordine = new OrdiniEntity();
         ordine.setTavolo(tavolo);
         ordine.setDataOrdine(oggiLavorativo());
-        ordine = ordiniRepository.save(ordine);// Ora ho l'ID generato automaticamente dal database
+        ordine = ordiniRepository.save(ordine); // Ora ho l'ID generato automaticamente dal database
+
+        log.debug("Ordine base creato con ID: {}", ordine.getIdOrdine());
 
         // Creo una lista per contenere tutte le relazioni ordine-prodotto
         List<OrdiniProdottiEntity> ordiniProdottiEntities = new ArrayList<>();
 
         // Per ogni prodotto che l'utente vuole ordinare
         for (ProdottiOrdinatiRequestDTO prodottoDto : dto.getListaProdottiOrdinati()) {
+            log.debug("Aggiunta prodotto ID {} all'ordine - Quantità: {}",
+                    prodottoDto.getIdProdotto(), prodottoDto.getQuantitaProdotto());
+
             // Controllo che il prodotto esista nel database
             ProdottiEntity prodotto = prodottiRepository.findById(prodottoDto.getIdProdotto())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Prodotto con ID " + prodottoDto.getIdProdotto() + " non trovato"));
+                    .orElseThrow(() -> {
+                        log.error("Prodotto con ID {} non trovato per l'ordine", prodottoDto.getIdProdotto());
+                        return new EntitaNonTrovataException("Prodotto", prodottoDto.getIdProdotto());
+                    });
 
             // Creo la chiave composita per la tabella ponte ordini_prodotti
             // (perché la tabella ha una chiave primaria composta da idOrdine + idProdotto)
@@ -102,12 +118,17 @@ public class OrdiniService {
 
         // Salvo tutte le relazioni ordine-prodotto in una volta sola per essere più efficiente
         ordiniProdottiRepository.saveAll(ordiniProdottiEntities);
-        // Cambio lo stato del tavolo in OCCUPATO
+        log.debug("Salvate {} relazioni ordine-prodotto", ordiniProdottiEntities.size());
+
+        // Cambio lo stato del tavolo in OCCUPATO se non lo è già
         if (tavolo.getStatoTavolo() != StatoTavolo.OCCUPATO) {
+            log.debug("Cambio stato tavolo da {} a OCCUPATO", tavolo.getStatoTavolo());
             tavolo.setStatoTavolo(StatoTavolo.OCCUPATO);
+            tavoliRepository.save(tavolo);
         }
-        // Alternativa commentata: potrei usare MapStruct invece di fare la conversione manualmente
-        // return ordiniMapper.ordiniEntityToDto(ordine)
+
+        log.info("Ordine creato con successo - ID: {}, Tavolo: {}, Prodotti: {}",
+                ordine.getIdOrdine(), tavolo.getNumeroNomeTavolo(), ordiniProdottiEntities.size());
 
         // Creo il DTO di risposta manualmente con i dati dell'ordine appena creato
         OrdiniDTO ordineDto = new OrdiniDTO();
@@ -120,41 +141,58 @@ public class OrdiniService {
     }
 
     public List<OrdiniDTO> getListaTuttiOrdiniAperti() {
+        log.debug("Richiesta lista tutti gli ordini aperti");
         // Cerco tutti gli ordini che NON sono chiusi
         List<OrdiniEntity> ordini = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
+        log.info("Trovati {} ordini aperti", ordini.size());
+
         // Converto ogni Entity in DTO
         return ordini.stream()
-                .map(el -> ordiniMapper.ordiniEntityToDto(el))
+                .map(ordiniMapper::ordiniEntityToDto)
                 .collect(Collectors.toList());
     }
 
-
     public List<OrdiniDTO> getListaOrdiniApertiByTavolo(Long idTavolo) {
+        log.debug("Richiesta ordini aperti per tavolo ID: {}", idTavolo);
+
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);
 
         // Cerco tutti gli ordini di questo tavolo che NON sono chiusi
         List<OrdiniEntity> ordini = ordiniRepository.findByTavoloIdAndStatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
+        log.info("Trovati {} ordini aperti per tavolo ID {}", ordini.size(), idTavolo);
 
         // Converto ogni Entity in DTO usando il mapper e ritorno la lista
         return ordini.stream()
-                .map(el -> ordiniMapper.ordiniEntityToDto(el))
+                .map(ordiniMapper::ordiniEntityToDto)
                 .collect(Collectors.toList());
     }
 
     public List<OrdiniDTO> getOrdiniDiOggi() {
+        LocalDate oggi = oggiLavorativo();
+        log.debug("Richiesta ordini di oggi (turno lavorativo): {}", oggi);
+
         // Cerco ordini con data di oggi che NON sono chiusi
-        List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(oggiLavorativo(), StatoOrdine.CHIUSO);
+        List<OrdiniEntity> ordini = ordiniRepository.findByDataOrdineAndStatoOrdineNot(oggi, StatoOrdine.CHIUSO);
+        log.info("Trovati {} ordini di oggi aperti", ordini.size());
+
         // Uso method reference per convertire Entity in DTO
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
 
     public List<OrdiniDTO> getOrdiniOggiByTavolo(@NotNull @Positive Long idTavolo) {
+        LocalDate oggi = oggiLavorativo();
+        log.debug("Richiesta ordini di oggi per tavolo ID: {} (data lavorativa: {})", idTavolo, oggi);
+
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);
+
         // Cerco ordini di questo tavolo, di oggi, che NON sono chiusi
         List<OrdiniEntity> ordini = ordiniRepository
-                .findByTavoloIdAndDataOrdineAndStatoOrdineNot(idTavolo, oggiLavorativo(), StatoOrdine.CHIUSO);
+                .findByTavoloIdAndDataOrdineAndStatoOrdineNot(idTavolo, oggi, StatoOrdine.CHIUSO);
+
+        log.info("Trovati {} ordini di oggi per tavolo ID {}", ordini.size(), idTavolo);
+
         return ordini.stream().map(ordiniMapper::ordiniEntityToDto).toList();
     }
 
@@ -165,10 +203,13 @@ public class OrdiniService {
     public List<ListaOrdiniEProdottiByTavoloResponseDTO> getDettaglioOrdineByIdTavolo(
             @NotNull @Positive Long idTavolo) {
 
+        log.debug("Richiesta dettaglio ordini per tavolo ID: {}", idTavolo);
         controlloSeIlTavoloEsiste(idTavolo);
 
         List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
                 .findByOrdineTavoloIdAndOrdineStatoOrdineNot(idTavolo, StatoOrdine.CHIUSO);
+
+        log.info("Trovate {} righe ordini-prodotti per tavolo ID {}", righe.size(), idTavolo);
 
         // Uso il metodo di aiuto per costruire la risposta
         return costruzioneDettagliOrdine(righe);
@@ -177,10 +218,15 @@ public class OrdiniService {
     public List<ListaOrdiniEProdottiByTavoloResponseDTO> getDettaglioOrdineDiOggiByIdTavolo(
             @NotNull @Positive Long idTavolo) {
 
+        LocalDate oggi = oggiLavorativo();
+        log.debug("Richiesta dettaglio ordini di oggi per tavolo ID: {} (data: {})", idTavolo, oggi);
+
         controlloSeIlTavoloEsiste(idTavolo);
 
         List<OrdiniProdottiEntity> righe = ordiniProdottiRepository
-                .findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(idTavolo, oggiLavorativo(), StatoOrdine.CHIUSO);
+                .findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(idTavolo, oggi, StatoOrdine.CHIUSO);
+
+        log.info("Trovate {} righe ordini-prodotti di oggi per tavolo ID {}", righe.size(), idTavolo);
 
         return costruzioneDettagliOrdine(righe);
     }
@@ -196,32 +242,48 @@ public class OrdiniService {
     @Transactional
     public RisultatoModificaOrdineDTO modificaOrdine(
             Long idOrdine, @Valid ModificaOrdineRequestDTO requestDto) {
+
+        log.info("Tentativo di modifica ordine ID: {}", idOrdine);
+
         // Prima controllo: la richiesta deve contenere almeno una modifica
         if (requestDto.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "La richiesta di modifica è vuota.");
+            log.warn("Richiesta di modifica vuota per ordine ID: {}", idOrdine);
+            throw new ModificaVuotaException();
         }
 
         // Controllo se l'ordine esiste nel database
         OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Ordine con ID «" + idOrdine + "» non trovato."));
+                .orElseThrow(() -> {
+                    log.error("Ordine con ID {} non trovato per modifica", idOrdine);
+                    return new EntitaNonTrovataException("Ordine", idOrdine);
+                });
 
         // Controllo business: non posso modificare un ordine già chiuso
         if (ordine.getStatoOrdine() == StatoOrdine.CHIUSO) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "L'ordine è chiuso, non è possibile modificarlo.");
+            log.warn("Tentativo di modifica ordine chiuso ID: {}", idOrdine);
+            throw new StatoNonValidoException("modificare l'ordine", "chiuso");
         }
+
+        log.debug("Ordine ID {} - Stato attuale: {}, Tavolo attuale: {}",
+                idOrdine, ordine.getStatoOrdine(), ordine.getTavolo().getNumeroNomeTavolo());
 
         // Se l'utente vuole cambiare tavolo (questa operazione o riesce o fallisce completamente)
         if (requestDto.getNuovoIdTavolo() != null) {
+            log.debug("Richiesto cambio tavolo per ordine ID {} -> nuovo tavolo ID: {}",
+                    idOrdine, requestDto.getNuovoIdTavolo());
+
             // Prima controllo che il nuovo tavolo esista
             controlloSeIlTavoloEsiste(requestDto.getNuovoIdTavolo());
 
             // Carico l'entity completa del nuovo tavolo
             TavoliEntity nuovoTavolo = tavoliRepository.findById(requestDto.getNuovoIdTavolo())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
-                            "Tavolo con ID «" + requestDto.getNuovoIdTavolo() + "» non trovato."));
+                    .orElseThrow(() -> {
+                        log.error("Nuovo tavolo con ID {} non trovato", requestDto.getNuovoIdTavolo());
+                        return new EntitaNonTrovataException("Tavolo", requestDto.getNuovoIdTavolo());
+                    });
+
+            log.info("Cambio tavolo ordine ID {}: '{}' -> '{}'",
+                    idOrdine, ordine.getTavolo().getNumeroNomeTavolo(), nuovoTavolo.getNumeroNomeTavolo());
 
             // Cambio il tavolo nell'ordine (in memoria per ora)
             ordine.setTavolo(nuovoTavolo);
@@ -234,6 +296,8 @@ public class OrdiniService {
 
         // Se l'utente vuole rimuovere dei prodotti
         if (requestDto.getProdottiDaRimuovere() != null && !requestDto.getProdottiDaRimuovere().isEmpty()) {
+            log.debug("Tentativo rimozione di {} prodotti dall'ordine ID {}",
+                    requestDto.getProdottiDaRimuovere().size(), idOrdine);
 
             // Per ogni prodotto da rimuovere, provo a processarlo singolarmente
             for (ProdottiDaRimuovereDTO prodotto : requestDto.getProdottiDaRimuovere()) {
@@ -242,25 +306,33 @@ public class OrdiniService {
                     boolean rimosso = processaRimozioneSingoloProdotto(idOrdine, prodotto);
                     if (rimosso) {
                         prodottiRimossi++;
+                        log.debug("Prodotto ID {} rimosso con successo dall'ordine ID {}",
+                                prodotto.getIdProdotto(), idOrdine);
                     }
 
-                } catch (ResponseStatusException e) {
+                } catch (EntitaNonTrovataException | StatoNonValidoException e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
                     String messaggioErrore = "Rimozione Prodotto ID " + prodotto.getIdProdotto() +
-                            ": " + e.getReason();
+                            ": " + e.getMessage();
                     errori.add(messaggioErrore);
+                    log.warn("Errore rimozione prodotto ID {} dall'ordine ID {}: {}",
+                            prodotto.getIdProdotto(), idOrdine, e.getMessage());
 
                 } catch (Exception e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
                     String messaggioErrore = "Rimozione Prodotto ID " + prodotto.getIdProdotto() +
                             ": " + e.getMessage();
                     errori.add(messaggioErrore);
+                    log.error("Errore imprevisto rimozione prodotto ID {} dall'ordine ID {}: {}",
+                            prodotto.getIdProdotto(), idOrdine, e.getMessage());
                 }
             }
         }
 
         // Se l'utente vuole aggiungere dei prodotti (qui gestisco errori parziali)
         if (requestDto.getProdottiDaAggiungere() != null && !requestDto.getProdottiDaAggiungere().isEmpty()) {
+            log.debug("Tentativo aggiunta di {} prodotti all'ordine ID {}",
+                    requestDto.getProdottiDaAggiungere().size(), idOrdine);
 
             // Per ogni prodotto da aggiungere, provo a processarlo singolarmente
             for (ProdottiOrdinatiRequestDTO prodotto : requestDto.getProdottiDaAggiungere()) {
@@ -269,18 +341,24 @@ public class OrdiniService {
                     boolean aggiunto = processaSingoloProdotto(idOrdine, ordine, prodotto);
                     if (aggiunto) {
                         prodottiAggiunti++;
+                        log.debug("Prodotto ID {} aggiunto con successo all'ordine ID {}",
+                                prodotto.getIdProdotto(), idOrdine);
                     }
-                } catch (ResponseStatusException e) {
+                } catch (EntitaNonTrovataException e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
                     String messaggioErrore = "Aggiunta Prodotto ID " + prodotto.getIdProdotto() +
-                            ": " + e.getReason();
+                            ": " + e.getMessage();
                     errori.add(messaggioErrore);
+                    log.warn("Errore aggiunta prodotto ID {} all'ordine ID {}: {}",
+                            prodotto.getIdProdotto(), idOrdine, e.getMessage());
 
                 } catch (Exception e) {
                     // Se questo prodotto da errore, lo segno ma continuo con gli altri
                     String messaggioErrore = "Aggiunta Prodotto ID " + prodotto.getIdProdotto() +
                             ": " + e.getMessage();
                     errori.add(messaggioErrore);
+                    log.error("Errore imprevisto aggiunta prodotto ID {} all'ordine ID {}: {}",
+                            prodotto.getIdProdotto(), idOrdine, e.getMessage());
                 }
             }
         }
@@ -294,36 +372,44 @@ public class OrdiniService {
 
         ListaOrdiniEProdottiByTavoloResponseDTO ordineAggiornato = costruzioneDettagliOrdine(righe).get(0);
 
+        log.info("Modifica ordine ID {} completata - Aggiunti: {}, Rimossi: {}, Errori: {}",
+                idOrdine, prodottiAggiunti, prodottiRimossi, errori.size());
+
         // Creo il risultato con informazioni complete su successi e fallimenti
         return creaRisultatoModifica(ordineAggiornato, prodottiAggiunti, prodottiRimossi, errori, requestDto);
     }
 
     @Transactional
     public RisultatoModificaStatoOrdineDTO modificaStatoOrdine(Long idOrdine, ModificaStatoOrdineRequestDTO request) {
+        log.info("Tentativo modifica stato ordine ID: {} -> {}", idOrdine, request.getNuovoStato());
 
         // Trova l'ordine
         OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
-                .orElseThrow(() -> new OrdineNotFoundException(idOrdine));
+                .orElseThrow(() -> {
+                    log.error("Ordine con ID {} non trovato per modifica stato", idOrdine);
+                    return new EntitaNonTrovataException("Ordine", idOrdine);
+                });
 
         StatoOrdine vecchioStato = ordine.getStatoOrdine();
         StatoOrdine nuovoStato = request.getNuovoStato();
 
+        log.debug("Ordine ID {} - Stato attuale: {}, Stato richiesto: {}", idOrdine, vecchioStato, nuovoStato);
+
         // Validazione: non può modificare ordini chiusi
         if (vecchioStato == StatoOrdine.CHIUSO) {
-            throw new ModificaStatoNonPermessaException(
-                    "L'ordine " + idOrdine + " è chiuso. Non è possibile modificarne lo stato."
-            );
+            log.warn("Tentativo di modifica stato su ordine chiuso ID: {}", idOrdine);
+            throw new StatoNonValidoException("modificare lo stato", "ordine chiuso");
         }
 
         // Validazione: non può impostare CHIUSO con questo endpoint
         if (nuovoStato == StatoOrdine.CHIUSO) {
-            throw new ModificaStatoNonPermessaException(
-                    "Per chiudere l'ordine usa l'endpoint dedicato di chiusura"
-            );
+            log.warn("Tentativo di chiusura ordine ID {} tramite endpoint modifica stato", idOrdine);
+            throw new StatoNonValidoException("chiudere l'ordine", "usa l'endpoint dedicato");
         }
 
         // Se è già nello stato richiesto
         if (vecchioStato == nuovoStato) {
+            log.info("Ordine ID {} già nello stato richiesto: {}", idOrdine, nuovoStato);
             return new RisultatoModificaStatoOrdineDTO(
                     idOrdine, vecchioStato, nuovoStato, true,
                     "Nessuna modifica: l'ordine è già nello stato " + nuovoStato
@@ -346,8 +432,10 @@ public class OrdiniService {
 
     private void controlloSeIlTavoloEsiste(Long idTavolo) {
         if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
+            log.error("Controllo esistenza tavolo fallito - ID: {}", idTavolo);
+            throw new EntitaNonTrovataException("Tavolo", idTavolo);
         }
+        log.debug("Controllo esistenza tavolo ID {} completato con successo", idTavolo);
     }
 
     /**
@@ -360,6 +448,8 @@ public class OrdiniService {
         // Risultato: una mappa dove la chiave è l'ID ordine e il valore è la lista delle sue righe
         Map<Long, List<OrdiniProdottiEntity>> byOrdine = righe.stream()
                 .collect(Collectors.groupingBy(r -> r.getOrdine().getIdOrdine()));
+
+        log.debug("Raggruppamento righe: {} ordini distinti identificati", byOrdine.size());
 
         // Per ogni gruppo di righe (che rappresenta un ordine)
         return byOrdine.values().stream().map(righeOrdine -> {
@@ -391,12 +481,15 @@ public class OrdiniService {
      */
     private boolean processaSingoloProdotto(Long idOrdine, OrdiniEntity ordine, ProdottiOrdinatiRequestDTO prodotto) {
 
+        log.debug("Processamento aggiunta prodotto ID {} all'ordine ID {}",
+                prodotto.getIdProdotto(), idOrdine);
+
         // Controllo che il prodotto esista nel database
         ProdottiEntity prodottoEntity = prodottiRepository.findById(prodotto.getIdProdotto())
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Prodotto con ID " + prodotto.getIdProdotto() + " non trovato nel menu"
-                ));
+                .orElseThrow(() -> {
+                    log.error("Prodotto con ID {} non trovato nel menu", prodotto.getIdProdotto());
+                    return new EntitaNonTrovataException("Prodotto", prodotto.getIdProdotto());
+                });
 
         // Creo la chiave per controllare se il prodotto è già nell'ordine
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, prodotto.getIdProdotto());
@@ -409,11 +502,17 @@ public class OrdiniService {
             Integer quantitaDaAggiungere = prodotto.getQuantitaProdotto();
             Integer quantitaModificataFinale = quantitaEsistente + quantitaDaAggiungere;
 
+            log.debug("Prodotto ID {} già presente - Quantità: {} + {} = {}",
+                    prodotto.getIdProdotto(), quantitaEsistente, quantitaDaAggiungere, quantitaModificataFinale);
+
             ordineEsistente.setQuantitaProdotto(quantitaModificataFinale);
             ordiniProdottiRepository.save(ordineEsistente);
 
         } else {
             // CASO 2: Prodotto nuovo - creo una nuova relazione ordine-prodotto
+            log.debug("Nuovo prodotto ID {} aggiunto all'ordine ID {} - Quantità: {}",
+                    prodotto.getIdProdotto(), idOrdine, prodotto.getQuantitaProdotto());
+
             OrdiniProdottiEntity nuovaRelazione = new OrdiniProdottiEntity();
             nuovaRelazione.setId(chiave);
             nuovaRelazione.setOrdine(ordine);
@@ -433,25 +532,31 @@ public class OrdiniService {
      */
     private boolean processaRimozioneSingoloProdotto(Long idOrdine, ProdottiDaRimuovereDTO prodotto) {
 
+        log.debug("Processamento rimozione prodotto ID {} dall'ordine ID {} - Quantità: {}",
+                prodotto.getIdProdotto(), idOrdine, prodotto.getQuantitaDaRimuovere());
+
         // Creo la chiave per trovare il prodotto nell'ordine
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, prodotto.getIdProdotto());
 
         // Controllo se il prodotto è presente nell'ordine
         OrdiniProdottiEntity ordineEsistente = ordiniProdottiRepository.findById(chiave)
-                .orElseThrow(() -> new ResponseStatusException(
-                        HttpStatus.NOT_FOUND,
-                        "Prodotto con ID " + prodotto.getIdProdotto() + " non presente nell'ordine"
-                ));
+                .orElseThrow(() -> {
+                    log.warn("Prodotto ID {} non presente nell'ordine ID {} per rimozione",
+                            prodotto.getIdProdotto(), idOrdine);
+                    return new EntitaNonTrovataException(
+                            "Prodotto con ID " + prodotto.getIdProdotto() + " non presente nell'ordine");
+                });
 
         int quantitaAttuale = ordineEsistente.getQuantitaProdotto();
         int quantitaDaRimuovere = prodotto.getQuantitaDaRimuovere();
 
         // Controllo che non stia provando a rimuovere più di quello che c'è
         if (quantitaDaRimuovere > quantitaAttuale) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Quantità da rimuovere (" + quantitaDaRimuovere +
-                            ") maggiore di quella presente (" + quantitaAttuale + ")"
+            log.warn("Tentativo rimozione quantità eccessiva prodotto ID {} - Attuale: {}, Da rimuovere: {}",
+                    prodotto.getIdProdotto(), quantitaAttuale, quantitaDaRimuovere);
+            throw new StatoNonValidoException(
+                    "rimuovere " + quantitaDaRimuovere + " unità",
+                    "disponibili solo " + quantitaAttuale + " unità"
             );
         }
 
@@ -459,9 +564,12 @@ public class OrdiniService {
 
         if (quantitaFinale == 0) {
             // CASO 1: Rimuovo tutto - cancello la riga
+            log.debug("Rimozione completa prodotto ID {} dall'ordine ID {}", prodotto.getIdProdotto(), idOrdine);
             ordiniProdottiRepository.delete(ordineEsistente);
         } else {
             // CASO 2: Rimozione parziale - aggiorno la quantità
+            log.debug("Rimozione parziale prodotto ID {} dall'ordine ID {} - Quantità finale: {}",
+                    prodotto.getIdProdotto(), idOrdine, quantitaFinale);
             ordineEsistente.setQuantitaProdotto(quantitaFinale);
             ordiniProdottiRepository.save(ordineEsistente);
         }
@@ -541,5 +649,4 @@ public class OrdiniService {
     private LocalDate oggiLavorativo() {
         return dataLavorativaUtil.getDataLavorativa();
     }
-
 }

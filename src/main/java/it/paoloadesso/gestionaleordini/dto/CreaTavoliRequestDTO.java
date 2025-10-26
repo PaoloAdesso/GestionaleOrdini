@@ -1,10 +1,12 @@
 package it.paoloadesso.gestionaleordini.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public class CreaTavoliRequestDTO {
 
-    @NotBlank
+    @NotBlank(message = "Il numero/nome tavolo è obbligatorio")
+    @Size(min = 1, max = 50, message = "Il numero/nome tavolo deve essere tra 1 e 50 caratteri")
     private String numeroNomeTavolo;
 
     public CreaTavoliRequestDTO(String numeroNomeTavolo) {
@@ -12,7 +14,6 @@ public class CreaTavoliRequestDTO {
     }
 
     public CreaTavoliRequestDTO() {
-
     }
 
     public String getNumeroNomeTavolo() {
@@ -23,4 +24,10 @@ public class CreaTavoliRequestDTO {
         this.numeroNomeTavolo = numeroNomeTavolo;
     }
 
+    @Override
+    public String toString() {
+        return "CreaTavoliRequestDTO{" +
+                "numeroNomeTavolo='" + numeroNomeTavolo + '\'' +
+                '}';
+    }
 }

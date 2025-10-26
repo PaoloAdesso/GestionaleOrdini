@@ -2,6 +2,8 @@ package it.paoloadesso.gestionaleordini.exceptionhandling;
 
 import it.paoloadesso.gestionaleordini.dto.ErrorResponseDTO;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,131 +13,167 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Metto queste stringhe in costanti così se devo cambiarle lo faccio una volta sola
-    private static final String TIMESTAMP = "timestamp";
-    private static final String STATUS = "status";
-    private static final String ERROR = "error";
-    private static final String MESSAGE = "message";
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(EntitaGiaEsistenteException.class)
+    public ResponseEntity<ErrorResponseDTO> handleEntitaGiaEsistente(EntitaGiaEsistenteException ex) {
+        log.warn("Entità già esistente: {}", ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "409",
+                "ENTITA_GIA_ESISTENTE"
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(EntitaNonTrovataException.class)
+    public ResponseEntity<ErrorResponseDTO> handleEntitaNonTrovata(EntitaNonTrovataException ex) {
+        log.warn("Entità non trovata: {}", ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "404",
+                "ENTITA_NON_TROVATA"
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(StatoNonValidoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleStatoNonValido(StatoNonValidoException ex) {
+        log.warn("Stato non valido: {}", ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "409",
+                "STATO_NON_VALIDO"
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(ModificaVuotaException.class)
+    public ResponseEntity<ErrorResponseDTO> handleModificaVuota(ModificaVuotaException ex) {
+        log.warn("Modifica vuota rilevata: {}", ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "400",
+                "MODIFICA_VUOTA"
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 
     /**
-     * Questo metodo cattura gli errori che lancio io nei Service.
-     * Ad esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
-     * Prende il messaggio che ho scritto e lo restituisce in formato JSON.
+     * Cattura gli errori RuntimeException, inclusi quelli lanciati nei miei Service.
+     */
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRuntimeException(RuntimeException e) {
+        log.error("RuntimeException catturata: {}", e.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                e.getMessage(),
+                "500",
+                "ERRORE_BUSINESS"
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Cattura gli errori che lancio io nei Service con ResponseStatusException.
      */
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Map<String, Object>> handleBusinessErrors(ResponseStatusException ex) {
-        // Creo la mappa che diventerà il JSON di risposta
-        Map<String, Object> response = new HashMap<>();
-        response.put(TIMESTAMP, LocalDateTime.now());
-        response.put(STATUS, ex.getStatusCode().value());
-        response.put(ERROR, ex.getStatusCode().toString());
-        response.put(MESSAGE, ex.getReason()); // Questo è il messaggio che ho scritto nel Service
+    public ResponseEntity<ErrorResponseDTO> handleResponseStatus(ResponseStatusException ex) {
+        log.warn("ResponseStatusException catturata: {} - Status: {}", ex.getReason(), ex.getStatusCode());
 
-        return new ResponseEntity<>(response, ex.getStatusCode());
+        String codiceErroreNumerico = ex.getStatusCode().toString();
+        String messaggio = ex.getReason();
+        String codiceErrore = "ERRORE_BUSINESS";
+
+        if (messaggio != null && messaggio.contains(":")) {
+            String[] parts = messaggio.split(":", 2);
+            codiceErrore = parts[0].trim();
+            messaggio = parts[1].trim();
+        }
+
+        ErrorResponseDTO error = new ErrorResponseDTO(messaggio, codiceErroreNumerico, codiceErrore);
+        return new ResponseEntity<>(error, ex.getStatusCode());
     }
 
     /**
-     * Questo metodo cattura 4 tipi diversi di errori di validazione.
-     * Uso instanceof per capire che tipo di errore è e comportarmi di conseguenza.
+     * Cattura errori di validazione sui DTO, quando @Valid fallisce.
      */
-    @ExceptionHandler({
-            MethodArgumentNotValidException.class,    // Errori sui DTO quando @Valid fallisce
-            ConstraintViolationException.class,       // Errori sui parametri URL quando @Positive fallisce
-            MissingServletRequestParameterException.class, // Quando manca un parametro obbligatorio
-            MethodArgumentTypeMismatchException.class      // Quando il tipo è sbagliato, ad esempio: testo invece di numero
-    })
-    public ResponseEntity<?> handleValidationErrors(Exception ex) {
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        log.warn("Errori di validazione DTO: {} campi non validi", ex.getBindingResult().getFieldErrors().size());
+        Map<String, String> errors = new HashMap<>();
 
-        // Caso speciale: per gli errori sui DTO restituisco una mappa campo→errore
-        if (ex instanceof MethodArgumentNotValidException validationEx) {
-            Map<String, String> errors = new HashMap<>();
-            // Per ogni campo sbagliato nel DTO, metto: nomeCampo → messaggioErrore
-            validationEx.getBindingResult().getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage()));
-            return ResponseEntity.badRequest().body(errors);
-        }
+        ex.getBindingResult().getFieldErrors().forEach(error ->
+                errors.put(error.getField(), error.getDefaultMessage()));
 
-        // Per tutti gli altri errori uso il formato standard
-        Map<String, Object> response = createStandardErrorResponse();
-
-        // Controllo che tipo di errore è e ci metto il messaggio giusto
-        if (ex instanceof ConstraintViolationException) {
-            response.put(MESSAGE, "Errore di validazione sui parametri");
-
-        } else if (ex instanceof MissingServletRequestParameterException missingParamEx) {
-            // Parametro mancante: uso il messaggio specifico che ho creato nel metodo d'aiuto
-            String message = getMissingParameterMessage(missingParamEx.getParameterName());
-            response.put(MESSAGE, message);
-
-        } else if (ex instanceof MethodArgumentTypeMismatchException typeMismatchEx) {
-            // Tipo sbagliato: uso il messaggio specifico che ho creato nel metodo d'aiuto
-            String message = getTypeMismatchMessage(typeMismatchEx.getName());
-            response.put(MESSAGE, message);
-        }
-
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.badRequest().body(errors);
     }
 
     /**
-     * Questo metodo cattura tutti gli errori imprevisti che non ho gestito.
+     * Cattura errori di validazione sui parametri URL.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponseDTO> handleConstraintViolation(ConstraintViolationException ex) {
+        log.warn("Violazione constraint sui parametri: {}", ex.getMessage());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "Errore di validazione sui parametri",
+                "400",
+                "VALIDAZIONE_PARAMETRI"
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Cattura quando manca un parametro obbligatorio nelle richieste.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMissingParameter(MissingServletRequestParameterException ex) {
+        log.warn("Parametro mancante nella richiesta: {}", ex.getParameterName());
+        String message = getMissingParameterMessage(ex.getParameterName());
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                message,
+                "400",
+                "PARAMETRO_MANCANTE"
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Cattura quando il tipo del parametro è sbagliato.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        log.warn("Tipo parametro errato: {} - valore ricevuto: {}", ex.getName(), ex.getValue());
+        String message = getTypeMismatchMessage(ex.getName());
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                message,
+                "400",
+                "TIPO_PARAMETRO_ERRATO"
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Cattura tutti gli errori imprevisti che non ho gestito.
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericErrors(Exception ex) {
-        Map<String, Object> response = createStandardErrorResponse();
-        response.put(STATUS, HttpStatus.INTERNAL_SERVER_ERROR.value());
-        response.put(ERROR, HttpStatus.INTERNAL_SERVER_ERROR.toString());
-        response.put(MESSAGE, "Si è verificato un errore interno del server");
-
-        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponseDTO> handleGenericErrors(Exception ex) {
+        log.error("Errore generico non gestito: {} - Classe: {}", ex.getMessage(), ex.getClass().getSimpleName());
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                "Si è verificato un errore interno del server",
+                "500",
+                "ERRORE_INTERNO"
+        );
+        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(OrdineNotFoundException.class)
-    public ResponseEntity<ErrorResponseDTO> handleOrdineNotFound(OrdineNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ErrorResponseDTO(ex.getMessage(), "ORDINE_NON_TROVATO"));
-    }
-
-    @ExceptionHandler(OrdineChiusoException.class)
-    public ResponseEntity<ErrorResponseDTO> handleOrdineChiuso(OrdineChiusoException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(new ErrorResponseDTO(ex.getMessage(), "ORDINE_GIA_CHIUSO"));
-    }
-
-    @ExceptionHandler(ProdottiNonPagatiException.class)
-    public ResponseEntity<ErrorResponseDTO> handleProdottiNonPagati(ProdottiNonPagatiException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponseDTO(ex.getMessage(), "PRODOTTI_NON_PAGATI"));
-    }
-
-    @ExceptionHandler(ModificaStatoNonPermessaException.class)
-    public ResponseEntity<ErrorResponseDTO> handleModificaStatoNonPermessa(ModificaStatoNonPermessaException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponseDTO(ex.getMessage(), "MODIFICA_STATO_NON_PERMESSA"));
-    }
-
-    /**
-     * Metodo di aiuto: crea la struttura base della risposta di errore.
-     * Così non devo riscrivere sempre le stesse cose.
-     */
-    private Map<String, Object> createStandardErrorResponse() {
-        Map<String, Object> response = new HashMap<>();
-        response.put(TIMESTAMP, LocalDateTime.now());
-        response.put(STATUS, HttpStatus.BAD_REQUEST.value());
-        response.put(ERROR, HttpStatus.BAD_REQUEST.toString());
-        return response;
-    }
-
-    /**
-     * Metodo di aiuto: quando manca un parametro, questo metodo decide quale messaggio mostrare.
-     * Ho messo messaggi specifici per i parametri che uso più spesso.
-     */
     private String getMissingParameterMessage(String parameterName) {
         return switch (parameterName) {
             case "idTavolo" -> "L'id del tavolo è obbligatorio";
